@@ -1,0 +1,1 @@
+Sadly Github limits file upload to 100MB, so to comply to this limit i zipped and splitted the app, unpack it to use it.
