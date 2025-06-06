@@ -1,5 +1,5 @@
 # unisoc-su
-A method for CVE-2025-31710 and to connect to cmd_skt to obtain a root shell on unisoc unpatched devices
+A method for CVE-2025-31710 and to connect to cmd_skt abstract socket to obtain a root shell on unisoc unpatched devices
 
 Before everyone screams, Unisoc itself authorized me to publish this after CVE-2025-31710 bullettin, so stay quiet.
 
