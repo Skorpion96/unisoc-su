@@ -39,6 +39,7 @@ https://github.com/user-attachments/assets/953ed696-f3a1-4556-8756-07bbe555b3ae
 
 Please do not repost this elsewhere if possible.
 
-The app icon icon was grabbed here, according to the license:[license-link]
+The app icon icon was grabbed here:[icon-link], and here is the license:[license-link]
 
-[license-link]:https://www.awicons.com/free-icons/object-icons/activity-monitor-icons-by-gordon-irving/matrix-icon/
+[icon-link]:https://www.awicons.com/free-icons/object-icons/activity-monitor-icons-by-gordon-irving/matrix-icon/
+[license-link]:https://creativecommons.org/licenses/by-nc-nd/3.0/
