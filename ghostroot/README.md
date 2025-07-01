@@ -56,10 +56,12 @@ SELinux Fails to Understand the Channel
 
 SELinux policies are unaware of the file-based IPC between root and app, so no policy violation is raised, even as commands execute as UID 0.
 
-If Accessed Again, It’s Weaponizable:
+If Accessed Again, It’s Weaponizable
+
 If this root client is ever accessed again — by malware, a misused API, or another app — it becomes a fully functional, stealthy root shell. Think in-RAM RAT.
 
-For Research and Awareness:
+For Research and Awareness
+
 This PoC shows how post-exploit persistence and stealth control channels can live entirely within existing userland and SEAndroid constraints.
 
 WARNING
