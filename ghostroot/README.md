@@ -37,6 +37,27 @@ The root process doesn't see any client conected or command sent, the same is al
 
 Untrusted apps can silently inject commands into this process using normal file I/O
 
+Why This PoC Exists
+This post-exploit root channel is not just a toy — it highlights real architectural flaws.
+
+Stealth Root Access:
+The system does not register that an untrusted app is sending commands.
+SELinux logs nothing meaningful. No client appears connected. No traces — yet full root execution occurs.
+
+The System Shell Was Just the Entry Point:
+Even though the original system shell vulnerability (now patched) was the entry vector, the real issue is deeper:
+The root process remains alive, unmonitored, and unprotected.
+Unisoc patched the door but left the house open.
+
+SELinux Fails to Understand the Channel:
+SELinux policies are unaware of the file-based IPC between root and app, so no policy violation is raised, even as commands execute as UID 0.
+
+If Accessed Again, It’s Weaponizable:
+If this root client is ever accessed again — by malware, a misused API, or another app — it becomes a fully functional, stealthy root shell. Think in-RAM RAT.
+
+For Research and Awareness:
+This PoC shows how post-exploit persistence and stealth control channels can live entirely within existing userland and SEAndroid constraints.
+
 WARNING
 
 Educational use only. Do not run this on devices you do not own.
