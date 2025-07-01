@@ -26,6 +26,9 @@ CVEs that inspired this method: [CVE-2022-47339](https://nvd.nist.gov/vuln/detai
 
 Here are provided three scripts for unisoc-su, one without tutorial: unisoc-su.sh, one that guides to enter the root shell with system shell only (this method is easier, works offline and without shizuku/adb): unisoc-su-syshell-only-tut.sh, the last one guides to enter the root shell using shizuku/adb, only used to run the setprop part: unisoc-su-adb-shizuku-tut.sh, source the one you like from the system shell, the blank one requires you to do everything manually, for 32 bit phones use unisoc-su-armv7l.sh (manual setup). For the system shell i added a script to add to PATH the sammy.systools lib directory on shells/tools folder, you can source it from /sdcard or any dir accessible by engineermode, note the script works also from adb shell/shizuku. I now added one multi script for both arm32 and arm64 archs to run the root shell and another for the system shell which will try the various methods to connect until successful.
 
+Now added GhostRoot (Post-Exploit Root Channel)
+A stealthy post-exploit command channel that survives in RAM and accepts input from any unprivileged app via file-based I/O.
+
 The exploit works up to Android 13 as on later versions unisoc removed the sharedUserId tag from the EngineerMode app and so now it's a normal user app, this makes selinux deny execution of the [cli-pie](https://github.com/TomKing062/cmd_services_client/releases) on android 14 and on Android 15.
 
 ![SharedUid-NormalUid_Compare-Patch](https://github.com/user-attachments/assets/fb757f06-e94a-4a78-8d64-434077a706cf)
