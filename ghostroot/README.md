@@ -27,7 +27,7 @@ Limitations
 
 Why This Matters
 
-This PoC demonstrates a stealth post-exploit control channel that remains viable only if the root process (spawned via a previously available exploit like unisoc-su) is still running in memory.
+This PoC demonstrates a stealth post-exploit control channel that remains listening for commands persistently (spawned via a previously available exploit like unisoc-su).
 
 The exploited process is still alive in RAM
 
