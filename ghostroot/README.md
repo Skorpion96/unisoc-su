@@ -43,7 +43,7 @@ Educational use only. Do not run this on devices you do not own.
 
 How-To
 
-Source the rootbridge.sh from the root shell (i'd copy it first on a directory it can access as on /sdcard), then you can close the root shell terminal and the engineermode app, after that on any untrusted-app with a terminal run the ghostroot scripts, for a full shell use the persistent one.
+Source the rootbridge.sh from the root shell (i'd copy it first on a directory it can access as on /sdcard), then you can close the root shell terminal and the engineermode app, after that on any untrusted_app with a terminal run the ghostroot scripts, for a full shell use the persistent one.
 
 
 ![ghostroot_termux](https://github.com/user-attachments/assets/4b5988cb-c3b6-44dc-8f30-c2bed8d3a333)
