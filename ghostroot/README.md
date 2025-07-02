@@ -74,3 +74,8 @@ Source the rootbridge.sh from the root shell (i'd copy it first on a directory i
 
 
 ![ghostroot_termux](https://github.com/user-attachments/assets/4b5988cb-c3b6-44dc-8f30-c2bed8d3a333)
+
+Demonstration
+
+https://github.com/user-attachments/assets/ce83fa97-01cc-40c4-9cb9-3837b7cb2c7f
+
