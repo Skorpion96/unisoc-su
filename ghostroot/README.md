@@ -79,3 +79,4 @@ Demonstration
 
 https://github.com/user-attachments/assets/ce83fa97-01cc-40c4-9cb9-3837b7cb2c7f
 
+I'm not responsible for misuse of this, this is only for research, and it's only a method, it's people who have the power to distinguish what is right or wrong, and in any case if you are worried you can just update or change device to a newer one.
