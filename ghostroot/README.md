@@ -8,6 +8,7 @@ This PoC demonstrates a memory-resident root channel using only shell scripts an
 - No socket
 - No netcat
 - No system binaries beyond toybox/sh
+
 (these first 4 after running unisoc-su of course are not needed but before yes)
 - SELinux logs almost nothing
 - The root shell is invisible to untrusted_app context
