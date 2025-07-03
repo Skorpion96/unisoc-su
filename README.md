@@ -34,6 +34,10 @@ The exploit works up to Android 13 as on later versions unisoc removed the share
 ![SharedUid-NormalUid_Compare-Patch](https://github.com/user-attachments/assets/fb757f06-e94a-4a78-8d64-434077a706cf)
 Image Provided by [TomKing062](https://github.com/TomKing062)
 
+A screenshot of both the system and the root shell
+
+![r00t_script6_new_version](https://github.com/user-attachments/assets/6e68555f-b3f7-45ea-a146-d357049403ab)
+
 Here Video Tutorials to enter the cmd_services root shell
 
 https://github.com/user-attachments/assets/225165d9-fd8b-4558-849a-7b00895ce894
