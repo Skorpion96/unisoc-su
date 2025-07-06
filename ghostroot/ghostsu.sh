@@ -6,7 +6,7 @@ BR_OUT="/sdcard/rootbridge/out/result.txt"
 usage() {
   cat <<EOF >&2
 Usage: ghostsu -c <command>
-Example: ghostsu -c "id; ls /data"
+Example: ghostsu -c "id; ls /data/ylog"
 EOF
   exit 1
 }
