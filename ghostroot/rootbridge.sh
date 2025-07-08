@@ -1,4 +1,7 @@
 #!/bin/sh
+if [ -s /sdcard/rootbridge ]; then
+cmd=$(rm -rf /sdcard/rootbridge/in /sdcard/rootbridge/out/result.txt /sdcard/rootbridge/out)
+fi
 mkdir -p /sdcard/rootbridge/in /sdcard/rootbridge/out
 while true; do
   if [ -s /sdcard/rootbridge/in/command.txt ]; then
