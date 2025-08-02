@@ -50,14 +50,14 @@ case "$BRAND" in
         ;;
 esac
 echo "Update app disabling completed.\n"
-echo "On Phone Dialer digit *#*#983#*#* to enable EMode Keypad, then press any key to continue..."
-read -n 1 -s
-echo "On EMode Keypad digit *983*673636# to enable EMode, then press any key to continue..."
-read -n 1 -s
 echo "Unlocking the principal EMode activity with a workaround\n"
 setprop persist.sys.snd.level.pwd 1
 echo "Not really needed but let's unlock as well EMode entirely, in case this will also unlock other sprd based apps like YLog (com.sprd.logmanager), com.sprd.validationtools, com.sprd.camta, com.emode.cameratest (com.zte.burntest.camera), com.zte.flagreset, and more...\n"
 setprop persist.sys.emode.enable 1
+echo "On Phone Dialer digit *#*#983#*#* to enable EMode Keypad, then press any key to continue..."
+read -n 1 -s
+echo "On EMode Keypad digit *983*673636# to enable EMode, then press any key to continue..."
+read -n 1 -s
 echo "Go to phone dialer and enter *#*#83781#*#*, then open ADB Shell activity manually from menu or alternatively use any launcher app as Root Activity Launcher or AM Debug, enter 'nc -s 127.0.0.1 -p 1234 -L sh -l' or 'toybox nc -s 127.0.0.1 -p 1234 -L sh -l' and press start (better copy the command out), then go back to the terminal and press any key to continue...\n"
 read -n 1 -s
 echo "exit adb/shizuku and on jackpal terminal, cd to the directory where this script is located and run 'cp -R UnisocEngsyshell ~ && cd ~ && chmod +x UnisocEngsyshell && clear && ./UnisocEngsyshell'\n"
