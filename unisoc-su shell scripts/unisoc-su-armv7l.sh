@@ -1,5 +1,10 @@
 #!/system/bin/sh
 
+if [ "$(whoami)" != "system" ]; then
+    echo "This script must be run as the system user (UID 1000), run the reverse shell on the com.sprd.engineermode app before running this script."
+    exit 1
+fi
+
 # Find the correct app lib path even with Scoped Storage naming
 SYS_TOOLS=$(find /data/app -type d -path "*/com.sammy.systools*/lib/arm" 2>/dev/null | head -n1)
 
