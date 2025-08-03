@@ -5,7 +5,7 @@ SYS_TOOLS=$(find /data/app -type d -path "*/com.sammy.systools*/lib/arm64" 2>/de
 
 # Fallback if not found
 if [ -z "$SYS_TOOLS" ]; then
-  echo "Error: com.sammy.systools library path not found!"
+  echo "Error: com.sammy.systools library path not found, install the app before running this script."
   exit 1
 fi
 
