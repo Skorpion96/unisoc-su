@@ -6,7 +6,7 @@ if [ "$(whoami)" != "system" ]; then
 fi
 
 # Find the correct app lib path even with Scoped Storage naming
-SYS_TOOLS=$(find /data/app -type d -path "*/com.sammy.systools*/lib/arm64" 2>/dev/null | head -n1)
+SYS_TOOLS=$(find /data/app -type d \( -path "*/com.sammy.systools*/lib/arm64" -o -path "*/com.sammy.systools*/lib/arm" \) 2>/dev/null | head -n1)
 
 # Fallback if not found
 if [ -z "$SYS_TOOLS" ]; then
