@@ -6,11 +6,11 @@ GETPROP=$(getprop ro.product.device)
 
 ghostshell() {
   while :; do
-    printf "$GETPROP:/ # "
+    printf "$GETPROP:$(ghostroot -c pwd) # "
     read CMD
     [ -n "$CMD" ] || continue
     echo "$CMD" > "$BR_IN"
-    sleep 0.4
+    sleep 0.2
     cat "$BR_OUT"
   done
 }
