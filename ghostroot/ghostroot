@@ -1,40 +1,79 @@
 #!/system/bin/sh
 
-BR_IN="/sdcard/rootbridge/in/command.txt"
-BR_OUT="/sdcard/rootbridge/out/result.txt"
-GETPROP=$(getprop ro.product.device)
+main() {
+    BR_IN="/sdcard/rootbridge/in/command.txt"
+    BR_OUT="/sdcard/rootbridge/out/result.txt"
+    GETPROP=$(getprop ro.product.device)
 
-ghostshell() {
-  while :; do
-    printf "$GETPROP:$(ghostroot -c pwd) # "
-    read CMD
-    [ -n "$CMD" ] || continue
-    echo "$CMD" > "$BR_IN"
-    sleep 0.2
-    cat "$BR_OUT"
-  done
-}
+    ghostshell() {
+      while :; do
+        printf "$GETPROP:$(ghostroot -c pwd) # "
+        read CMD
+        [ -n "$CMD" ] || continue
+        echo "$CMD" > "$BR_IN"
+        sleep 0.2
+        cat "$BR_OUT"
+      done
+    }
 
-usage() {
-  cat <<EOF >&2
+    usage() {
+      cat <<EOF >&2
 Usage:
   ghostroot -c <command>   # run a single root command
   ghostroot                # enter interactive ghostroot shell
 EOF
-  exit 1
+      exit 1
+    }
+
+    # If no args, start shell
+    [ $# -eq 0 ] && ghostshell
+
+    # Handle -c mode
+    if [ "$1" = "-c" ]; then
+      shift
+      [ $# -gt 0 ] || usage
+      CMD="$*"
+      printf '%s\n' "$CMD" > "$BR_IN"
+      sleep 0.2
+      cat "$BR_OUT"
+    else
+      usage
+    fi
 }
 
-# If no args, start shell
-[ $# -eq 0 ] && ghostshell
-
-# Handle -c mode
-if [ "$1" = "-c" ]; then
-  shift
-  [ $# -gt 0 ] || usage
-  CMD="$*"
-  printf '%s\n' "$CMD" > "$BR_IN"
-  sleep 0.2
-  cat "$BR_OUT"
-else
-  usage
+# --- Service check before running main() ---
+SERVICE_STATE="$(getprop init.svc.cmd_services)"
+if [ "$SERVICE_STATE" != "running" ]; then
+    echo "Error: cmd_services not running."
+    echo "Please start it before running this script."
+    exit 1
 fi
+
+# --- Ping–response check ---
+BR_IN="/sdcard/rootbridge/in/command.txt"
+BR_OUT="/sdcard/rootbridge/out/result.txt"
+PING_TOKEN="GR_PING_$$"
+
+# Clear any old output
+> "$BR_OUT"
+
+# Send ping
+echo "echo $PING_TOKEN" > "$BR_IN"
+
+# Wait for up to 2 seconds for correct reply
+timeout=20  # 20 × 0.1s = 2 seconds
+while [ $timeout -gt 0 ]; do
+    if grep -q "$PING_TOKEN" "$BR_OUT"; then
+        break
+    fi
+    sleep 0.1
+    timeout=$((timeout - 1))
+done
+
+if [ $timeout -eq 0 ]; then
+    echo "Error: rootbridge is not responding."
+    echo "Please start rootbridge before running this script."
+    exit 1
+fi
+
+main "$@"

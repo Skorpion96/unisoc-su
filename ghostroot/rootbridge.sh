@@ -1,4 +1,10 @@
 #!/bin/sh
+
+if [ "$(whoami)" != "root" ]; then
+    echo "This script must be run as the root user (UID 0) on the cmd_services shell, run unisoc-su before running this script."
+    exit 1
+fi
+
 if [ -s /sdcard/rootbridge ]; then
 cmd=$(rm -r /sdcard/rootbridge)
 fi
