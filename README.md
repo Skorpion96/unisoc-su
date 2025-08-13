@@ -34,6 +34,9 @@ The exploit works up to Android 13 as on later versions unisoc removed the share
 ![SharedUid-NormalUid_Compare-Patch](https://github.com/user-attachments/assets/fb757f06-e94a-4a78-8d64-434077a706cf)
 Image Provided by [TomKing062](https://github.com/TomKing062)
 
+This unless your device has EngineerMode into vendor and it wasn't updated with the system partition, i just found this situation on a ZTE Blade A55:
+[ZTE_Blade_A55_system_ext_build.txt](https://github.com/user-attachments/files/21763984/ZTE_Blade_A55_system_ext_build.txt) [ZTE_Blade_A55_vendor_build.txt](https://github.com/user-attachments/files/21763989/ZTE_Blade_A55_vendor_build.txt)
+
 A screenshot of both the system and the root shell
 
 ![r00t_script6_new_version](https://github.com/user-attachments/assets/6e68555f-b3f7-45ea-a146-d357049403ab)
