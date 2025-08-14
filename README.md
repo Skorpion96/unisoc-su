@@ -35,7 +35,7 @@ The exploit works up to Android 13 as on later versions unisoc removed the share
 Image Provided by [TomKing062](https://github.com/TomKing062)
 
 This unless your device has EngineerMode into vendor and it wasn't updated with the system partition, i just found this situation on a ZTE Blade A55:
-[ZTE_Blade_A55_system_ext_build.txt](https://github.com/user-attachments/files/21763984/ZTE_Blade_A55_system_ext_build.txt) [ZTE_Blade_A55_vendor_build.txt](https://github.com/user-attachments/files/21763989/ZTE_Blade_A55_vendor_build.txt)
+[ZTE_Blade_A55_system_ext_build.txt](https://github.com/user-attachments/files/21763984/ZTE_Blade_A55_system_ext_build.txt) [ZTE_Blade_A55_vendor_build.txt](https://github.com/user-attachments/files/21763989/ZTE_Blade_A55_vendor_build.txt) or if your device doesn't have for some reason the patch for this exploit applied even on android 14 and up (assuming you got this lucky). If it didn't you will end in two situations, you might have cmd_services or tool_service which is the new version of this previous one. Note, tool_service doesn't need any setprop and should be always active. [tool_service.rc.txt](https://github.com/user-attachments/files/21764386/tool_service.rc.txt)
 
 A screenshot of both the system and the root shell
 
