@@ -44,16 +44,16 @@ export TERM=xterm-256color
 case "$USER" in
   system)
     if [ -n "$SYS_TOOLS" ]; then
-      PATH="$SYS_TOOLS:/product/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/system_ext/bin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin:/data/data/com.sprd.engineermode:/data/data/android:$PATH"
+      PATH="$SYS_TOOLS:/product/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/system_ext/bin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin:/data/data/com.sprd.engineermode:/data/data/android:$PATH" && HOME=/data/data/com.sprd.engineermode
     fi
     ;;
   shell)
     if [ -n "$SHELL_TOOLS" ]; then
-      PATH="$SHELL_TOOLS:/product/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/system_ext/bin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin:/data/local/tmp:/data/local/tests:/data/local/traces:$PATH"
+      PATH="$SHELL_TOOLS:/product/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/system_ext/bin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin:/data/local/tmp:/data/local/tests:/data/local/traces:$PATH" && HOME=/data/local/tmp
     fi
     ;;
   root)
-    PATH="$ROOT_TOOLS:$PATH"
+    PATH="$ROOT_TOOLS:$PATH" && HOME=/
     ;;
 esac
 
