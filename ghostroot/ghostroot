@@ -3,10 +3,13 @@
 main() {
     BR_IN="/sdcard/rootbridge/in/command.txt"
     BR_OUT="/sdcard/rootbridge/out/result.txt"
-    GETPROP=$(getprop ro.product.device)
 
     ghostshell() {
       while :; do
+        if [ -z "$GETPROP_INIT_DONE" ]; then
+        GETPROP=$(getprop ro.product.device)
+        export GETPROP_INIT_DONE=1
+        fi
         if [ -z "$HOME_INIT_DONE" ]; then
         ghostroot -c HOME=/
         export HOME_INIT_DONE=1
