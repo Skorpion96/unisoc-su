@@ -26,7 +26,7 @@ SHELL_TOOLS=$(pm path --user 0 com.sammy.systools | sed -E 's/^package:(.*)\/bas
 fi
 
 # Static root tools paths (not validated individually)
-ROOT_TOOLS="/data/ylog:/data/anr:/data/tombstones:/data/local/traces:/data/corefile:/data/fonts:/data/user/0/com.unisoc.phone"
+ROOT_TOOLS="/data/ylog:/data/anr:/data/tombstones:/data/local/traces:/data/corefile:/data/fonts:/data/user/0/com.unisoc.phone:/data/system:/data/system_ce:/data/system_de"
 
 # Validate dynamic paths
 if [ "$USER" = "system" ]; then
