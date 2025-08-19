@@ -5,6 +5,7 @@ if [ "$(whoami)" != "root" ]; then
     exit 1
 fi
 
+HOME=/
 if [ -s /sdcard/rootbridge ]; then
 cmd=$(rm -r /sdcard/rootbridge)
 fi

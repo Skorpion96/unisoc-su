@@ -10,10 +10,6 @@ main() {
         GETPROP=$(getprop ro.product.device)
         export GETPROP_INIT_DONE=1
         fi
-        if [ -z "$HOME_INIT_DONE" ]; then
-        ghostroot -c HOME=/
-        export HOME_INIT_DONE=1
-        fi
         printf "$GETPROP:$(ghostroot -c pwd) # "
         read CMD
         [ -n "$CMD" ] || continue
