@@ -17,5 +17,4 @@ while true; do
     eval "$cmd" > /sdcard/rootbridge/out/result.txt 2>&1
     rm /sdcard/rootbridge/in/command.txt
   fi
-  sleep 0.2
 done
