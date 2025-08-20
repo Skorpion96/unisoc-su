@@ -15,8 +15,8 @@ main() {
         printf "$GETPROP:$CURRENT_DIR # "
         read CMD
         [ "$CMD" = "q" ] && exit 1
-        [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed" && exit 1
-        [ "$CMD" = "fi" ] && echo "Obviously you don't want to kill the script and the cli-pie so don't type this" && ghostshell
+        [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
+        [ "$CMD" = "fi" ] && echo "Obviously you don't want to kill the script and the cli-pie so don't type this." && ghostshell
         [ -n "$CMD" ] || continue
         echo "$CMD" > "$BR_IN"
         sleep 0.2
