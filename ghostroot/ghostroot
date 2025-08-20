@@ -13,6 +13,7 @@ main() {
         printf "$GETPROP:$(ghostroot -c pwd) # "
         read CMD
         [ "$CMD" = "q" ] && exit 1
+        [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "the ghostroot will now exit as the rootbridge.sh got closed" && exit 1
         [ -n "$CMD" ] || continue
         echo "$CMD" > "$BR_IN"
         sleep 0.2
