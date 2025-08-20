@@ -9,11 +9,12 @@ main() {
         CURRENT_DIR=$(ghostroot -c toybox pwd -L 2>/dev/null)
         [ -z "$CURRENT_DIR" ] && CURRENT_DIR="/"
       while :; do
-        if [ -z "$GETPROP_INIT_DONE" ]; then
+        if [ -z "$INIT_DONE" ]; then
         GETPROP=$(getprop ro.product.device)
-        export GETPROP_INIT_DONE=1
+        GHOST_PS1=$(ghostroot -c 'echo $PS1')
+        export INIT_DONE=1
         fi
-        printf "$GETPROP:$CURRENT_DIR # "
+        printf "$GETPROP:$CURRENT_DIR $GHOST_PS1 "
         read CMD
         [ "$CMD" = "q" ] && exit 1
         [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
