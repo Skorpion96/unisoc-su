@@ -5,20 +5,29 @@ main() {
     BR_OUT="/sdcard/rootbridge/out/result.txt"
 
     ghostshell() {
+        CURRENT_DIR=$(ghostroot -c toybox pwd -L 2>/dev/null)
+        [ -z "$CURRENT_DIR" ] && CURRENT_DIR="/"
       while :; do
         if [ -z "$GETPROP_INIT_DONE" ]; then
         GETPROP=$(getprop ro.product.device)
         export GETPROP_INIT_DONE=1
         fi
-        printf "$GETPROP:$(ghostroot -c pwd) # "
+        printf "$GETPROP:$CURRENT_DIR # "
         read CMD
         [ "$CMD" = "q" ] && exit 1
         [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "the ghostroot will now exit as the rootbridge.sh got closed" && exit 1
+        [ "$CMD" = "fi" ] && echo "obviously you don't want to kill the script and the cli-pie so don't type this" && ghostshell
         [ -n "$CMD" ] || continue
         echo "$CMD" > "$BR_IN"
         sleep 0.2
         cat "$BR_OUT"
-      done
+        out=$(ghostroot -c toybox pwd -L 2>/dev/null)
+        case "$CMD" in
+            cd|cd*)
+                [ -n "$out" ] && CURRENT_DIR="$out"
+                ;;
+        esac
+    done
     }
 
     usage() {
