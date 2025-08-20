@@ -12,6 +12,7 @@ main() {
         fi
         printf "$GETPROP:$(ghostroot -c pwd) # "
         read CMD
+        [ "$CMD" = "q" ] && exit 1
         [ -n "$CMD" ] || continue
         echo "$CMD" > "$BR_IN"
         sleep 0.2
@@ -24,6 +25,8 @@ main() {
 Usage:
   ghostroot -c <command>   # run a single root command
   ghostroot                # enter interactive ghostroot shell
+  <exit>                     # exits the rootbridge.sh
+  <q>                        # exits the ghostroot, you can always enter again and resume
 EOF
       exit 1
     }
