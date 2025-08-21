@@ -9,29 +9,46 @@ main() {
     ghostshell() {
         CURRENT_DIR=$(ghostroot -c toybox pwd -L 2>/dev/null)
         [ -z "$CURRENT_DIR" ] && CURRENT_DIR="/"
-      while :; do
+        while :; do
         if [ -z "$INIT_DONE" ]; then
         GETPROP=$(getprop ro.product.device)
         GHOST_PS1=$(ghostroot -c 'echo $PS1')
         echo "Welcome to the ghostroot shell (powered by cmd_skt root socket)"
-        echo "Do not insert \ or ) or ( on the prompt because the script and the cli-pie will crash (i don't know if i forgot some pattern so be careful)"
+        echo "Do not insert \\ or ) or ( on the prompt because the script and the cli-pie will crash (i don't know if I forgot some pattern so be careful)"
         export INIT_DONE=1
         fi
         printf "$GETPROP:$CURRENT_DIR $GHOST_PS1 "
         read CMD
         [ "$CMD" = "q" ] && echo "ghostroot shell provided by the Elite x Skorpion96" && exit 1
         [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
+        CMD_NAME=$(printf "%s" "$CMD" | awk '{print $1}')
+        if [[ "$CMD_NAME" == *=* ]]; then
+        IS_ASSIGNMENT=1
+        else
+        IS_ASSIGNMENT=0
+        fi
+        if command -v "$CMD_NAME" >/dev/null 2>&1 || type "$CMD_NAME" >/dev/null 2>&1; then
+        IS_REAL_CMD=1
+        else
+        IS_REAL_CMD=0
+        fi
         for word in $CMD; do
-        for banned in $BANNED_CMDS; do
+        for banned in "${BANNED_CMDS[@]}"; do
         if [ "$word" = "$banned" ]; then
-        echo "Obviously you don't want to kill the script and the cli-pie so don't type this." && ghostshell
+        echo "Obviously you don't want the script to act weird or to kill it with the cli-pie altogether so don't type this."
+        ghostshell
         fi
         done
         done
         for banned in "${BANNED_PATTERNS[@]}"; do
-        if [[ "$CMD" == *"$banned"* ]]; then
-        echo "Obviously you don't want to kill the script and the cli-pie so don't type this." && ghostshell
+        case "$CMD" in
+        *"$banned"*)
+        if [ "$IS_REAL_CMD" -eq 0 ] && [ "$IS_ASSIGNMENT" -eq 0 ]; then
+        echo "Obviously you don't want the script to act weird or to kill it with the cli-pie altogether so don't type this."
+        ghostshell
         fi
+        ;;
+        esac
         done
         [ -n "$CMD" ] || continue
         echo "$CMD" > "$BR_IN"
@@ -39,12 +56,12 @@ main() {
         cat "$BR_OUT"
         out=$(ghostroot -c toybox pwd -L 2>/dev/null)
         case "$CMD" in
-            cd|cd*)
-                [ -n "$out" ] && CURRENT_DIR="$out"
-                ;;
+        cd|cd*)
+        [ -n "$out" ] && CURRENT_DIR="$out"
+        ;;
         esac
-    done
-    }
+        done
+        }
 
     usage() {
       cat <<EOF >&2
