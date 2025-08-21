@@ -16,7 +16,7 @@ main() {
         fi
         printf "$GETPROP:$CURRENT_DIR $GHOST_PS1 "
         read CMD
-        [ "$CMD" = "q" ] && exit 1
+        [ "$CMD" = "q" ] && echo "ghostroot shell provided by the Elite x Skorpion96" && exit 1
         [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
         for banned in "${BANNED_CMDS[@]}"; do
         if [ "$CMD" = "$banned" ]; then
