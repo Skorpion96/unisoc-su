@@ -13,8 +13,8 @@ main() {
         if [ -z "$INIT_DONE" ]; then
         GETPROP=$(getprop ro.product.device)
         GHOST_PS1=$(ghostroot -c 'echo $PS1')
-        echo "Welcome to the ghostroot shell (powered by cmd_skt root socket)"
-        echo "Do not insert \\ or ) or ( on the prompt because the script and the cli-pie will crash (i don't know if I forgot some pattern so be careful)"
+        echo "Welcome to the ghostroot shell (powered by cmd_skt root socket)\n"
+        echo "Important!!!! Do not insert \\ or ) or ( on the prompt because the script and the cli-pie will crash or hang, also do not mix patterns alone or with commands e.g echo 'id; (i don't know if I forgot some pattern so be careful)"
         export INIT_DONE=1
         fi
         printf "$GETPROP:$CURRENT_DIR $GHOST_PS1 "
