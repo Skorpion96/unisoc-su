@@ -4,6 +4,7 @@ main() {
     BR_IN="/sdcard/rootbridge/in/command.txt"
     BR_OUT="/sdcard/rootbridge/out/result.txt"
     BANNED_CMDS=(if fi else elif then while do done for until case esac select in function continue break logout return trap unset)
+    BANNED_PATTERNS=("'" '"' ":" ";" "{" "}" "[" "]" ";;" "''" '""')
 
     ghostshell() {
         CURRENT_DIR=$(ghostroot -c toybox pwd -L 2>/dev/null)
@@ -19,7 +20,12 @@ main() {
         [ "$CMD" = "q" ] && echo "ghostroot shell provided by the Elite x Skorpion96" && exit 1
         [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
         for banned in "${BANNED_CMDS[@]}"; do
-        if [ "$CMD" = "$banned" ]; then
+        if [[ "$CMD" == *"$banned"* ]]; then
+        echo "Obviously you don't want to kill the script and the cli-pie so don't type this." && ghostshell
+        fi
+        done
+        for banned in "${BANNED_PATTERNS[@]}"; do
+        if [[ "$CMD" == *"$banned"* ]]; then
         echo "Obviously you don't want to kill the script and the cli-pie so don't type this." && ghostshell
         fi
         done
