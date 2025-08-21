@@ -19,10 +19,12 @@ main() {
         read CMD
         [ "$CMD" = "q" ] && echo "ghostroot shell provided by the Elite x Skorpion96" && exit 1
         [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
-        for banned in "${BANNED_CMDS[@]}"; do
-        if [[ "$CMD" == *"$banned"* ]]; then
+        for word in $CMD; do
+        for banned in $BANNED_CMDS; do
+        if [ "$word" = "$banned" ]; then
         echo "Obviously you don't want to kill the script and the cli-pie so don't type this." && ghostshell
         fi
+        done
         done
         for banned in "${BANNED_PATTERNS[@]}"; do
         if [[ "$CMD" == *"$banned"* ]]; then
