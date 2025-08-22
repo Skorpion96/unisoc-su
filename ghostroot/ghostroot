@@ -57,7 +57,7 @@ main() {
                 :
             else
                 echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
-                return 1
+                continue
             fi
         fi
         case "$CMD" in
