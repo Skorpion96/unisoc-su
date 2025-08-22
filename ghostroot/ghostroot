@@ -35,7 +35,7 @@ main() {
         for word in $CMD; do
         for banned in "${BANNED_CMDS[@]}"; do
         if [ "$word" = "$banned" ]; then
-        echo "Obviously you don't want the script to act weird or to kill it with the cli-pie altogether so don't type this."
+        echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
         ghostshell
         fi
         done
@@ -44,7 +44,7 @@ main() {
         case "$CMD" in
         *"$banned"*)
         if [ "$IS_REAL_CMD" -eq 0 ] && [ "$IS_ASSIGNMENT" -eq 0 ]; then
-        echo "Obviously you don't want the script to act weird or to kill it with the cli-pie altogether so don't type this."
+        echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
         ghostshell
         fi
         ;;
