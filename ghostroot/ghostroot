@@ -50,12 +50,16 @@ main() {
         ;;
         esac
         done
-        case "$CMD" in
-            *"("*|*")"*)
+        if echo "$CMD" | grep -q '[()]'; then
+            if echo "$CMD" | grep -Eq '\$\([^)]*\)'; then
+                :
+            elif echo "$CMD" | grep -Eq '"[^"]*[()]{1}[^"]*"'; then
+                :
+            else
                 echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
-                ghostshell
-                ;;
-        esac
+                return 1
+            fi
+        fi
         case "$CMD" in
             *"\\"*)
                 echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
