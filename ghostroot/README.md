@@ -34,7 +34,7 @@ The exploited process is still alive in RAM
 
 No cleanup mechanism terminates it
 
-The root process doesn't see any client conected or command sent, the same is almost valid for selinux which will only show some denials for the untrusted_app
+The root process doesn't see any client conected or command sent, the same is almost valid for selinux which will only show some denials for the untrusted_app or worse something unrelated or nothing at all
 
 Untrusted apps can silently inject commands into this process using normal file I/O
 
