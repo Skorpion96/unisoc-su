@@ -35,7 +35,7 @@ main() {
         for word in $CMD; do
         for banned in "${BANNED_CMDS[@]}"; do
         if [ "$word" = "$banned" ]; then
-        echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
+        echo "We don't do that here."
         ghostshell
         fi
         done
@@ -44,7 +44,7 @@ main() {
         case "$CMD" in
         *"$banned"*)
         if [ "$IS_REAL_CMD" -eq 0 ] && [ "$IS_ASSIGNMENT" -eq 0 ]; then
-        echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
+        echo "We don't do that here."
         ghostshell
         fi
         ;;
@@ -56,16 +56,14 @@ main() {
             elif echo "$CMD" | grep -Eq '"[^"]*[()]{1}[^"]*"'; then
                 :
             else
-                echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
+                echo "We don't do that here."
                 continue
             fi
         fi
-        case "$CMD" in
-            *"\\"*)
-                echo "Obviously you don't want the script to act weird or to die with the cli-pie altogether so don't type this."
-                ghostshell
-                ;;
-        esac
+        if echo "$CMD" | grep -q '[!]' && ! echo "$CMD" | grep -Eq '(\$\([^\)]*\)|".*!")'; then
+        echo "We don't do that here."
+        continue
+        fi
         [ -n "$CMD" ] || continue
         echo "$CMD" > "$BR_IN"
         sleep 0.2
