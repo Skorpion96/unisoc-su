@@ -298,6 +298,19 @@ EOF
           echo "We don't do that here."
           exit 1
       fi
+
+      # ADDED: Check for three or more consecutive quotes (injection attempt)
+      if printf '%s\n' "$CMD" | grep -q "'''"; then
+          # Three or more consecutive single quotes
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if printf '%s\n' "$CMD" | grep -q '"""'; then
+          # Three or more consecutive double quotes
+          echo "We don't do that here."
+          exit 1
+      fi
       
       # ADDED: Check for unbalanced parentheses
       paren_open=$(echo "$CMD" | tr -cd '(' | wc -c)
