@@ -58,6 +58,7 @@ EOF
         bracket_open=$(echo "$cmd" | tr -cd '[' | wc -c)
         bracket_close=$(echo "$cmd" | tr -cd ']' | wc -c)
         single_quotes=$(echo "$cmd" | tr -cd "'" | wc -c)
+        double_quotes=$(echo "$cmd" | tr -cd '"' | wc -c)
         
         if [ "$paren_open" -ne "$paren_close" ]; then
             return 0
@@ -69,6 +70,9 @@ EOF
             return 0
         fi
         if [ $((single_quotes % 2)) -ne 0 ]; then
+            return 0
+        fi
+        if [ $((double_quotes % 2)) -ne 0 ]; then
             return 0
         fi
         
