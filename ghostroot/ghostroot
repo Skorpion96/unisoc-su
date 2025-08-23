@@ -32,15 +32,11 @@ EOF
                 return 0
                 ;;
             *"&"*)
-
                 case "$cmd" in
                     *"&&"*|*"&>"*) 
-
                         ;;
                     *)
-
                         if echo "$cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&[[:space:]]*$'; then
-
                             :
                         else
                             return 0
@@ -50,7 +46,6 @@ EOF
                 ;;
         esac
         
-
         paren_open=$(echo "$cmd" | tr -cd '(' | wc -c)
         paren_close=$(echo "$cmd" | tr -cd ')' | wc -c)
         brace_open=$(echo "$cmd" | tr -cd '{' | wc -c) 
@@ -87,10 +82,14 @@ EOF
             return 0
         fi
         
-        # ADDED: Control for dangerous semicolon usage (but allow valid command chaining)
+        # IMPROVED: Enhanced semicolon validation
         case "$cmd" in
-            ";"|*" ;"|"; "*|*"; ")
-                # Semicolon at start, end, or isolated - dangerous
+            ";")
+                # Isolated semicolon - dangerous
+                return 0
+                ;;
+            *" ;"*|*"; "*)
+                # Semicolon with spaces around it (could be command separator abuse)
                 return 0
                 ;;
             *";;"*)
@@ -98,6 +97,24 @@ EOF
                 return 0
                 ;;
         esac
+        
+        # ADDED: Check for semicolon with dots patterns
+        if echo "$cmd" | grep -qE '(;\.+|\.+;)'; then
+            # Patterns like ;. .; ...; ;.. etc.
+            return 0
+        fi
+        
+        # ADDED: Check for multiple dots (potential directory traversal when combined with other chars)
+        if echo "$cmd" | grep -qE '\.{3,}'; then
+            # Three or more consecutive dots
+            return 0
+        fi
+        
+        # ADDED: Check for semicolon followed by space and special chars
+        if echo "$cmd" | grep -qE '; [\.!/\\\]'; then
+            # Semicolon followed by space and potentially dangerous chars
+            return 0
+        fi
         
         # ADDED: Control for backslash at end (incomplete escape)
         case "$cmd" in
@@ -166,7 +183,6 @@ EOF
             sleep 0.2
             cat "$BR_OUT"
             
-
             case "$CMD" in
                 cd|cd*)
                     out=$(ghostroot -c toybox pwd -L 2>/dev/null)
@@ -183,7 +199,6 @@ EOF
     if [ "$1" = "-c" ]; then
       shift
       
-      # ADDED: Check if no arguments after -c
       if [ $# -eq 0 ]; then
           echo "Error: -c requires a command argument"
           usage
@@ -198,7 +213,6 @@ EOF
           fi
       done
       
-      # ADDED: Check if command is empty after concatenation
       if [ -z "$CMD" ] || [ "$CMD" = " " ]; then
           echo "Error: empty command provided"
           exit 1
@@ -217,10 +231,15 @@ EOF
               ;;
       esac
       
-      # ADDED: Smart check for problematic semicolons (allow valid command chaining)
+      # ENHANCED: Improved semicolon checks for -c mode
       case "$CMD" in
-          ";"|*" ;"|"; "*|*"; ")
-              # Semicolon at start, end, or isolated - dangerous
+          ";")
+              # Isolated semicolon - dangerous
+              echo "We don't do that here."
+              exit 1
+              ;;
+          *" ;"*|*"; "*)
+              # Semicolon with spaces around it
               echo "We don't do that here."
               exit 1
               ;;
@@ -231,6 +250,27 @@ EOF
               ;;
       esac
       
+      # ADDED: Check for semicolon with dots patterns in -c mode
+      if echo "$CMD" | grep -qE '(;\.+|\.+;)'; then
+          # Patterns like ;. .; ...; ;.. etc.
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      # ADDED: Check for multiple consecutive dots
+      if echo "$CMD" | grep -qE '\.{3,}'; then
+          # Three or more consecutive dots (potential traversal)
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      # ADDED: Check for semicolon followed by space and special chars
+      if echo "$CMD" | grep -qE '; [\.!/\\\]'; then
+          # Semicolon followed by space and dangerous chars
+          echo "We don't do that here."
+          exit 1
+      fi
+      
       # ADDED: Check for isolated or trailing backslashes (incomplete escapes)
       case "$CMD" in
           "\\")
@@ -238,7 +278,6 @@ EOF
               exit 1
               ;;
           *"\\")
-              # Check if it's a backslash at the very end
               if [ "${CMD#${CMD%?}}" = "\\" ]; then
                   echo "We don't do that here."
                   exit 1
