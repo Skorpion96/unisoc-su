@@ -6,6 +6,17 @@ main() {
     BANNED_CMDS="if fi else elif then while do done for until case esac select in function continue break logout return trap unset"
     DANGEROUS_PATTERNS="\` <( >| &"
 
+    usage() {
+      cat <<EOF >&2
+Usage:
+  ghostroot -c <command>   # run a single root command
+  ghostroot                # enter interactive ghostroot shell
+  <exit>                   # exits the rootbridge.sh
+  <q>                      # exits the ghostroot, you can always enter again and resume
+  <help>                   # Show this help message
+EOF
+}
+
     is_dangerous_command() {
         cmd="$1"
 
@@ -136,6 +147,11 @@ main() {
             [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
             
             [ -n "$CMD" ] || continue
+
+            if [ "$CMD" = "help" ]; then
+                usage
+                continue
+            fi
             
             if is_dangerous_command "$CMD"; then
                 echo "We don't do that here."
@@ -154,17 +170,6 @@ main() {
                     ;;
             esac
         done
-    }
-
-    usage() {
-      cat <<EOF >&2
-Usage:
-  ghostroot -c <command>   # run a single root command
-  ghostroot                # enter interactive ghostroot shell
-  <exit>                   # exits the rootbridge.sh
-  <q>                      # exits the ghostroot, you can always enter again and resume
-EOF
-      exit 1
     }
 
    # If no args, start shell
@@ -193,6 +198,11 @@ EOF
       if [ -z "$CMD" ] || [ "$CMD" = " " ]; then
           echo "Error: empty command provided"
           exit 1
+      fi
+
+      if [ "$CMD" = "help" ]; then
+          usage
+          exit 0
       fi
       
       # IMPROVED SECURITY CHECKS for -c mode
