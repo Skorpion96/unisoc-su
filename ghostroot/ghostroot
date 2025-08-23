@@ -3,99 +3,292 @@
 main() {
     BR_IN="/sdcard/rootbridge/in/command.txt"
     BR_OUT="/sdcard/rootbridge/out/result.txt"
-    BANNED_CMDS=(if fi else elif then while do done for until case esac select in function continue break logout return trap unset)
-    BANNED_PATTERNS=("'" '"' ":" ";" "{" "}" "[" "]" ";;" "''" '""')
+    BANNED_CMDS="if fi else elif then while do done for until case esac select in function continue break logout return trap unset"
+    DANGEROUS_PATTERNS="\` <( >| &"
+
+    is_dangerous_command() {
+        cmd="$1"
+
+        first_word=$(echo "$cmd" | awk '{print $1}' | cut -d'=' -f1)
+        for banned in $BANNED_CMDS; do
+            if [ "$first_word" = "$banned" ]; then
+                return 0
+            fi
+        done
+        
+        case "$cmd" in
+            *\`*|*"<("*|*">|"*)
+                return 0
+                ;;
+            *"&"*)
+
+                case "$cmd" in
+                    *"&&"*|*"&>"*) 
+
+                        ;;
+                    *)
+
+                        if echo "$cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&[[:space:]]*$'; then
+
+                            :
+                        else
+                            return 0
+                        fi
+                        ;;
+                esac
+                ;;
+        esac
+        
+
+        paren_open=$(echo "$cmd" | tr -cd '(' | wc -c)
+        paren_close=$(echo "$cmd" | tr -cd ')' | wc -c)
+        brace_open=$(echo "$cmd" | tr -cd '{' | wc -c) 
+        brace_close=$(echo "$cmd" | tr -cd '}' | wc -c)
+        bracket_open=$(echo "$cmd" | tr -cd '[' | wc -c)
+        bracket_close=$(echo "$cmd" | tr -cd ']' | wc -c)
+        single_quotes=$(echo "$cmd" | tr -cd "'" | wc -c)
+        
+        if [ "$paren_open" -ne "$paren_close" ]; then
+            return 0
+        fi
+        if [ "$brace_open" -ne "$brace_close" ]; then
+            return 0  
+        fi
+        if [ "$bracket_open" -ne "$bracket_close" ]; then
+            return 0
+        fi
+        if [ $((single_quotes % 2)) -ne 0 ]; then
+            return 0
+        fi
+        
+        case "$cmd" in
+            *'$(('*|*'))'*|*'$['*|*']'*|*'${#'*|*'${!'*|*'${'*)
+                return 0 ;;
+            *"'"*";"*|*";"*"'"*|*'&>'*|*'<<<'*)
+                return 0 ;;
+        esac
+        
+        if echo "$cmd" | grep -q '[!]' && ! echo "$cmd" | grep -qE '(\$\([^\)]*\)|"[^"]*![^"]*")'; then
+            return 0
+        fi
+        
+        # ADDED: Control for dangerous semicolon usage (but allow valid command chaining)
+        case "$cmd" in
+            ";"|*" ;"|"; "*|*"; ")
+                # Semicolon at start, end, or isolated - dangerous
+                return 0
+                ;;
+            *";;"*)
+                # Double semicolon - dangerous
+                return 0
+                ;;
+        esac
+        
+        # ADDED: Control for backslash at end (incomplete escape)
+        case "$cmd" in
+            "\\")
+                return 0
+                ;;
+            *"\\")
+                # Check if it's a backslash at the very end
+                if [ "${cmd#${cmd%?}}" = "\\" ]; then
+                    return 0
+                fi
+                ;;
+        esac
+        
+        case "$cmd" in
+            "|"|*" |"|*"|") 
+                return 0
+                ;;
+            "&&"|*" &&"|*"&& ") 
+                return 0
+                ;;
+            "||"|*" ||"|*"|| ") 
+                return 0
+                ;;
+        esac
+        
+        if echo "$cmd" | grep -qE '&{3,}'; then
+            return 0
+        fi
+        
+        return 1
+    }
 
     ghostshell() {
         CURRENT_DIR=$(ghostroot -c toybox pwd -L 2>/dev/null)
         [ -z "$CURRENT_DIR" ] && CURRENT_DIR="/"
+        
         while :; do
-        if [ -z "$INIT_DONE" ]; then
-        GETPROP=$(getprop ro.product.device)
-        GHOST_PS1=$(ghostroot -c 'echo $PS1')
-        echo "Welcome to the ghostroot shell (powered by cmd_skt root socket)\n"
-        echo "Important!!!! Be careful with what you insert on the prompt because the script and the cli-pie might crash or hang, also do not mix patterns alone or with commands e.g echo 'id; (i don't know if I forgot some pattern so be careful), be aware that the '-c' mode has no checks, you are warned."
-        export INIT_DONE=1
-        fi
-        printf "$GETPROP:$CURRENT_DIR $GHOST_PS1 "
-        read -r CMD
-        [ "$CMD" = "q" ] && echo "ghostroot shell provided by the Elite x Skorpion96" && exit 1
-        [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
-        CMD_NAME=$(printf "%s" "$CMD" | awk '{print $1}')
-        if [[ "$CMD_NAME" == *=* ]]; then
-        IS_ASSIGNMENT=1
-        else
-        IS_ASSIGNMENT=0
-        fi
-        if command -v "$CMD_NAME" >/dev/null 2>&1 || type "$CMD_NAME" >/dev/null 2>&1; then
-        IS_REAL_CMD=1
-        else
-        IS_REAL_CMD=0
-        fi
-        for word in $CMD; do
-        for banned in "${BANNED_CMDS[@]}"; do
-        if [ "$word" = "$banned" ]; then
-        echo "We don't do that here."
-        ghostshell
-        fi
-        done
-        done
-        for banned in "${BANNED_PATTERNS[@]}"; do
-        case "$CMD" in
-        *"$banned"*)
-        if [ "$IS_REAL_CMD" -eq 0 ] && [ "$IS_ASSIGNMENT" -eq 0 ]; then
-        echo "We don't do that here."
-        ghostshell
-        fi
-        ;;
-        esac
-        done
-        if echo "$CMD" | grep -q '[()]'; then
-            if echo "$CMD" | grep -Eq '\$\([^)]*\)'; then
-                :
-            elif echo "$CMD" | grep -Eq '"[^"]*[()]{1}[^"]*"'; then
-                :
-            else
+            if [ -z "$INIT_DONE" ]; then
+                GETPROP=$(getprop ro.product.device)
+                GHOST_PS1=$(ghostroot -c 'echo $PS1')
+                echo "Welcome to the ghostroot shell (powered by cmd_skt root socket)\n"
+                echo "Important!!!! Be careful with what you insert on the prompt because the script and the cli-pie might crash or hang, i don't know if I forgot some pattern so be careful."
+                export INIT_DONE=1
+            fi
+            
+            printf "$GETPROP:$CURRENT_DIR $GHOST_PS1 "
+            read -r CMD
+            
+            [ "$CMD" = "q" ] && echo "ghostroot shell provided by the Elite x Skorpion96" && exit 1
+            [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
+            
+            [ -n "$CMD" ] || continue
+            
+            if is_dangerous_command "$CMD"; then
                 echo "We don't do that here."
                 continue
             fi
-        fi
-        if echo "$CMD" | grep -q '[!]' && ! echo "$CMD" | grep -Eq '(\$\([^\)]*\)|".*!")'; then
-        echo "We don't do that here."
-        continue
-        fi
-        [ -n "$CMD" ] || continue
-        echo "$CMD" > "$BR_IN"
-        sleep 0.2
-        cat "$BR_OUT"
-        out=$(ghostroot -c toybox pwd -L 2>/dev/null)
-        case "$CMD" in
-        cd|cd*)
-        [ -n "$out" ] && CURRENT_DIR="$out"
-        ;;
-        esac
+            
+            echo "$CMD" > "$BR_IN"
+            sleep 0.2
+            cat "$BR_OUT"
+            
+
+            case "$CMD" in
+                cd|cd*)
+                    out=$(ghostroot -c toybox pwd -L 2>/dev/null)
+                    [ -n "$out" ] && CURRENT_DIR="$out"
+                    ;;
+            esac
         done
-        }
+    }
 
     usage() {
       cat <<EOF >&2
 Usage:
   ghostroot -c <command>   # run a single root command
   ghostroot                # enter interactive ghostroot shell
-  <exit>                     # exits the rootbridge.sh
-  <q>                        # exits the ghostroot, you can always enter again and resume
+  <exit>                   # exits the rootbridge.sh
+  <q>                      # exits the ghostroot, you can always enter again and resume
 EOF
       exit 1
     }
 
-    # If no args, start shell
-    [ $# -eq 0 ] && ghostshell
+   # If no args, start shell
+   [ $# -eq 0 ] && ghostshell
 
-    # Handle -c mode
+# Handle -c mode
     if [ "$1" = "-c" ]; then
       shift
-      [ $# -gt 0 ] || usage
-      CMD="$*"
+      
+      # ADDED: Check if no arguments after -c
+      if [ $# -eq 0 ]; then
+          echo "Error: -c requires a command argument"
+          usage
+      fi
+      
+      CMD=""
+      for arg in "$@"; do
+          if [ -z "$CMD" ]; then
+              CMD="$arg"
+          else
+              CMD="$CMD $arg"
+          fi
+      done
+      
+      # ADDED: Check if command is empty after concatenation
+      if [ -z "$CMD" ] || [ "$CMD" = " " ]; then
+          echo "Error: empty command provided"
+          exit 1
+      fi
+      
+      # IMPROVED SECURITY CHECKS for -c mode
+      case "$CMD" in
+          *\`*|*'$('*|*'${'*|*'$(('*)
+              echo "We don't do that here."
+              exit 1
+              ;;
+      esac
+      
+      # ADDED: Smart check for problematic semicolons (allow valid command chaining)
+      case "$CMD" in
+          ";"|*" ;"|"; "*|*"; ")
+              # Semicolon at start, end, or isolated - dangerous
+              echo "We don't do that here."
+              exit 1
+              ;;
+          *";;"*)
+              # Double semicolon - dangerous
+              echo "We don't do that here."
+              exit 1
+              ;;
+      esac
+      
+      # ADDED: Check for isolated or trailing backslashes (incomplete escapes)
+      case "$CMD" in
+          "\\")
+              echo "We don't do that here."
+              exit 1
+              ;;
+          *"\\")
+              # Check if it's a backslash at the very end
+              if [ "${CMD#${CMD%?}}" = "\\" ]; then
+                  echo "We don't do that here."
+                  exit 1
+              fi
+              ;;
+      esac
+      
+      # ADDED: Check for unbalanced single quotes
+      single_quotes_count=$(echo "$CMD" | tr -cd "'" | wc -c)
+      if [ $((single_quotes_count % 2)) -ne 0 ]; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      # ADDED: Check for unbalanced double quotes
+      double_quotes_count=$(echo "$CMD" | tr -cd '"' | wc -c)
+      if [ $((double_quotes_count % 2)) -ne 0 ]; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      # ADDED: Check for unbalanced parentheses
+      paren_open=$(echo "$CMD" | tr -cd '(' | wc -c)
+      paren_close=$(echo "$CMD" | tr -cd ')' | wc -c)
+      if [ "$paren_open" -ne "$paren_close" ]; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      # ADDED: Check for unbalanced braces
+      brace_open=$(echo "$CMD" | tr -cd '{' | wc -c) 
+      brace_close=$(echo "$CMD" | tr -cd '}' | wc -c)
+      if [ "$brace_open" -ne "$brace_close" ]; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      # ADDED: Check for unbalanced square brackets
+      bracket_open=$(echo "$CMD" | tr -cd '[' | wc -c)
+      bracket_close=$(echo "$CMD" | tr -cd ']' | wc -c)
+      if [ "$bracket_open" -ne "$bracket_close" ]; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      # ADDED: Check for ANSI escape sequences (POSIX compatible)
+      case "$CMD" in
+          *"\\033"*|*"\\x1b"*|*"\\e"*)
+              echo "We don't do that here."
+              exit 1
+              ;;
+      esac
+      
+      # ADDED: Check for real ESC character (ASCII 27)
+      if printf '%s' "$CMD" | grep -q "$(printf '\033')"; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if is_dangerous_command "$CMD"; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
       printf '%s\n' "$CMD" > "$BR_IN"
       sleep 0.2
       cat "$BR_OUT"
