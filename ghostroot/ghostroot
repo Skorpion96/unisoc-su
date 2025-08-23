@@ -140,7 +140,7 @@ EOF
                 GETPROP=$(getprop ro.product.device)
                 GHOST_PS1=$(ghostroot -c 'echo $PS1')
                 echo "Welcome to the ghostroot shell (powered by cmd_skt root socket)\n"
-                echo "Important!!!! Be careful with what you insert on the prompt because the script and the cli-pie might crash or hang, i don't know if I forgot some pattern so be careful."
+                echo "Important!!!! Be careful with what you insert into the prompt because the script and the cli-pie might crash or hang, i don't know if I forgot some pattern so be careful. If using -c is highly reccomended to wrap commands inside quotes. Use help to see the usage options.\n"
                 export INIT_DONE=1
             fi
             
