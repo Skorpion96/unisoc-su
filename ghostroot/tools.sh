@@ -9,6 +9,23 @@ if [ "$USER" != "system" ] && [ "$USER" != "shell" ] && [ "$USER" != "root" ]; t
   exit 1
 fi
 
+SYS_TOOLS_SET=$(echo $SYS_TOOLS)
+SHELL_TOOLS_SET=$(echo $SHELL_TOOLS)
+ROOT_TOOLS_SET=$(echo $ROOT_TOOLS)
+
+if [ -n "$SYS_TOOLS_SET" ]; then
+echo "You already ran this script for system"
+return 0
+fi
+if [ -n "$SHELL_TOOLS_SET" ]; then
+echo "You already ran this script for shell"
+return 0
+fi
+if [ -n "$ROOT_TOOLS_SET" ]; then
+echo "You already ran this script for root"
+return 0
+fi
+
 # Function to validate and assign a path
 assign_path() {
   local variable_name="$1"
