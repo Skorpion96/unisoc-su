@@ -115,7 +115,59 @@ EOF
             # Semicolon followed by space and potentially dangerous chars
             return 0
         fi
+
+        # SEMICOLON + REDIRECT VALIDATION
+        # Check for semicolon followed by redirect operators
+        if echo "$CMD" | grep -qE ';[<>]'; then
+            # Patterns like ;> ;< ;<< ;>> etc.
+            return 0
+        fi
         
+        # Check for redirect operators followed by semicolon
+        if echo "$CMD" | grep -qE '[<>];'; then
+            # Patterns like >; <; >>; <<; etc.
+            return 0
+        fi
+        
+        # Check for multiple redirect-semicolon combinations
+        if echo "$CMD" | grep -qE '([<>];|;[<>]){2,}'; then
+            # Multiple occurrences of these patterns
+            return 0
+        fi
+        
+        # ENHANCED PIPE VALIDATION
+        # Check for pipes followed by non-alphanumeric characters (except valid pipe combinations)
+        if echo "$CMD" | grep -qE '\|[^a-zA-Z0-9 ]'; then
+            # Pipe followed by special characters like |. |, |: |; |/ etc.
+            return 0
+        fi
+        
+        # Check for pipes preceded by non-alphanumeric characters (except valid combinations)
+        if echo "$CMD" | grep -qE '[^a-zA-Z0-9 ]\|'; then
+            # Special characters followed by pipe like .| ,| :| ;| /| etc.
+            return 0
+        fi
+        
+        # Check for multiple consecutive pipes (more than 2)
+        if echo "$CMD" | grep -qE '\|{3,}'; then
+            # Three or more consecutive pipes
+            return 0
+        fi
+        
+        # Check for pipes with only punctuation/symbols around them
+        if echo "$CMD" | grep -qE '[[:punct:]]\|[[:punct:]]'; then
+            # Punctuation-pipe-punctuation patterns
+            return 0
+        fi
+        
+        # Check for pipe at the very beginning or end with special chars
+        case "$CMD" in
+            \|[^a-zA-Z0-9\ ]*|*[^a-zA-Z0-9\ ]\|)
+                # Pipe at start/end with non-alphanumeric chars
+                return 0
+                ;;
+        esac
+
         # ADDED: Control for backslash at end (incomplete escape)
         case "$cmd" in
             "\\")
@@ -221,6 +273,58 @@ EOF
       if [ "$CMD" = "help" ]; then
           usage
           exit 0
+      fi
+
+      # ENHANCED PIPE VALIDATION for -c mode
+      if echo "$CMD" | grep -qE '\|[^a-zA-Z0-9 ]'; then
+          # Pipe followed by special characters
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if echo "$CMD" | grep -qE '[^a-zA-Z0-9 ]\|'; then
+          # Special characters followed by pipe
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if echo "$CMD" | grep -qE '\|{3,}'; then
+          # Three or more consecutive pipes
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if echo "$CMD" | grep -qE '[[:punct:]]\|[[:punct:]]'; then
+          # Punctuation-pipe-punctuation patterns
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      case "$CMD" in
+          \|[^a-zA-Z0-9\ ]*|*[^a-zA-Z0-9\ ]\|)
+              # Pipe at start/end with non-alphanumeric chars
+              echo "We don't do that here."
+              exit 1
+              ;;
+      esac
+
+      # SEMICOLON + REDIRECT VALIDATION for -c mode
+      if echo "$CMD" | grep -qE ';[<>]'; then
+          # Patterns like ;> ;< ;<< ;>> etc.
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if echo "$CMD" | grep -qE '[<>];'; then
+          # Patterns like >; <; >>; <<; etc.
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if echo "$CMD" | grep -qE '([<>];|;[<>]){2,}'; then
+          # Multiple occurrences of these patterns
+          echo "We don't do that here."
+          exit 1
       fi
       
       # IMPROVED SECURITY CHECKS for -c mode
