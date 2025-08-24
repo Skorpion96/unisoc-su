@@ -34,7 +34,7 @@ The exploited process is still alive in RAM
 
 No cleanup mechanism terminates it
 
-The root process doesn't see any client conected or command sent, the same is almost valid for selinux which will only show some denials for the untrusted_app or worse something unrelated or nothing at all
+The root process doesn't see any client connected or command sent, the same is almost valid for selinux which will only show some denials for the untrusted_app or worse something unrelated or nothing at all
 
 Untrusted apps can silently inject commands into this process using normal file I/O
 
@@ -55,7 +55,7 @@ Unisoc patched the door but left the house open.
 
 SELinux Fails to Understand the Channel
 
-SELinux policies are unaware of the file-based IPC between root and app, so no policy violation is raised, even as commands execute as UID 0.
+SELinux policies are unaware of the file-based IPC between the root client and the app, so no policy violation is raised, even as commands execute as UID 0.
 
 If Accessed Again, It’s Weaponizable
 
