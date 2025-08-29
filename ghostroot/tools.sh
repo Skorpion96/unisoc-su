@@ -26,6 +26,13 @@ echo "You already ran this script for root"
 return 0
 fi
 
+ARCH=$(getprop ro.product.cpu.abi)
+if [ "$ARCH" = "arm64-v8a" ]; then
+ARM_DIR=arm64
+else
+ARM_DIR=arm
+fi
+
 # Function to validate and assign a path
 assign_path() {
   local variable_name="$1"
@@ -42,8 +49,15 @@ SHELL_TOOLS=$(pm path --user 0 com.sammy.systools | sed -E 's/^package:(.*)\/bas
 { [ -d "$SHELL_TOOLS/lib/arm" ] && SHELL_TOOLS="$SHELL_TOOLS/lib/arm" || SHELL_TOOLS=""; }
 fi
 
+BRAND=$(getprop ro.product.brand)
+if [ "$USER" = "system" ] && [ "$BRAND" = "ZTE" ]; then
+PATH="$SYS_TOOLS:/data/data/com.zte.burntest.camera:/data/data/com.zte.easymode:/data/data/com.zte.zdm.omacp:/data/data/zte.com.cn.alarmclock:/data/data/androidzte:/data/data/zpub.res:/data/data/com.zte.emode:/data/data/com.zte.emode/cache/oat_primary/$ARM_DIR:/data/data/com.zte.aiengine:/data/data/com.zte.aiengine/cache/oat_primary/$ARM_DIR:/data/data/com.zte.appsimcardfilter:/data/data/com.zte.appsimcardfilter/cache/oat_primary/$ARM_DIR:/data/data/com.zte.zbackup.platservice:/data/data/com.zte.zbackup.platservice/cache/oat_primary/$ARM_DIR:/data/data/com.zte.powersavemode:/data/data/com.zte.powersavemode/cache/oat_primary/$ARM_DIR:/data/data/com.zte.zgesture:/data/data/com.zte.zgesture/cache/oat_primary/$ARM_DIR:/data/data/com.zte.mifavor.launcher.adapter:/data/data/com.zte.mifavor.launcher.adapter/cache/oat_primary/$ARM_DIR:/data/data/com.zte.linkspeedup:/data/data/com.zte.linkspeedup/cache/oat_primary/$ARM_DIR:/data/data/com.android.ztescreenshot:/data/data/com.android.ztescreenshot/cache/oat_primary/$ARM_DIR:/data/data/com.zte.zdmdaemon:/data/data/com.zte.zdmdaemon/cache/oat_primary/$ARM_DIR:$PATH" && HOME=/data/data/com.sprd.engineermode
+export PATH
+return 0
+fi
+
 # Static root tools paths (not validated individually)
-ROOT_TOOLS="/data/ylog:/data/anr:/data/tombstones:/data/local/traces:/data/corefile:/data/fonts:/data/user/0/com.unisoc.phone:/data/system:/data/system_ce:/data/system_de"
+ROOT_TOOLS="/data/ylog:/data/anr:/data/tombstones:/data/local/traces:/data/corefile:/data/fonts:/data/system:/data/system_ce:/data/system_de:/data/vendor:/data/vendor/tombstones"
 
 # Validate dynamic paths
 if [ "$USER" = "system" ]; then
@@ -61,12 +75,12 @@ export TERM=xterm-256color
 case "$USER" in
   system)
     if [ -n "$SYS_TOOLS" ]; then
-      PATH="$SYS_TOOLS:/product/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/system_ext/bin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin:/data/data/com.sprd.engineermode:/data/data/android:$PATH" && HOME=/data/data/com.sprd.engineermode
+      PATH="$SYS_TOOLS:/data/data/com.sprd.engineermode:/data/data/android:/data/resource-cache:/data/user/0/com.unisoc.enginecore:/data/user/0/com.sprd.camta:/data/user/0/com.android.localtransport:/data/user/0/com.android.subsys:/data/data/com.android.wallpaperbackup:/data/data/com.android.providers.settings:/data/data/com.sprd.srmi:/data/data/com.android.inputdevices:/data/data/com.android.dynsystem:/data/data/com.android.location.fused:/data/data/com.android.settings:/data/data/com.android.server.telecom:/data/ylog:/data/ylog/ap:/data/ylog/ap/settings:/data/data/com.android.keychain:/data/user/0/com.android.keychain/databases:/data/data/com.unisoc.networksliceserver:/data/data/com.unisoc.networksliceserver/cache/oat_primary/$ARM_DIR:/data/data/com.sprd.validationtools:/data/data/com.sprd.validationtools/cache/oat_primary/$ARM_DIR:/apex/com.android.adbd/bin:/proc/mdbg:/data/misc/ethernet:/data/vendor:$PATH" && HOME=/data/data/com.sprd.engineermode
     fi
     ;;
   shell)
     if [ -n "$SHELL_TOOLS" ]; then
-      PATH="$SHELL_TOOLS:/product/bin:/apex/com.android.runtime/bin:/apex/com.android.art/bin:/system_ext/bin:/system/bin:/system/xbin:/odm/bin:/vendor/bin:/vendor/xbin:/data/local/tmp:/data/local/tests:/data/local/traces:$PATH" && HOME=/data/local/tmp
+      PATH="$SHELL_TOOLS:/data/local/tmp:/data/local/tests:/data/local/traces:$PATH" && HOME=/data/local/tmp
     fi
     ;;
   root)
