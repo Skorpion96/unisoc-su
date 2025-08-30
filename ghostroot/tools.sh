@@ -77,7 +77,7 @@ export TERM=xterm-256color
 case "$USER" in
   system)
     if [ -n "$SYS_TOOLS" ]; then
-      PATH="$SYS_TOOLS:SPRD_PATH:$PATH" && HOME=/data/data/com.sprd.engineermode
+      PATH="$SYS_TOOLS:$SPRD_PATH:$PATH" && HOME=/data/data/com.sprd.engineermode
     fi
     ;;
   shell)
