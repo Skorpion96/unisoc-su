@@ -17,7 +17,7 @@ Usage:
 EOF
 }
 
-    is_dangerous_command() {
+        is_dangerous_command() {
         cmd="$1"
 
         first_word=$(echo "$cmd" | awk '{print $1}' | cut -d'=' -f1)
@@ -33,7 +33,11 @@ EOF
                 ;;
             *"&"*)
                 case "$cmd" in
-                    *"&&"*|*"&>"*) 
+                    *"&>"*) 
+                        # Allow redirect operators like &>
+                        ;;
+                    *"&&"*)
+                        # Handle && validation separately below
                         ;;
                     *)
                         if echo "$cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&[[:space:]]*$'; then
@@ -45,6 +49,39 @@ EOF
                 esac
                 ;;
         esac
+
+        # ENHANCED && VALIDATION (replaces the old logic)
+        case "$cmd" in
+            "&&")
+                # Isolated && - dangerous
+                return 0
+                ;;
+            "&&"*)
+                # Commands starting with && (like "&&id" or "&& id") - BLOCKED
+                return 0
+                ;;
+            *"&&")
+                # Commands ending with && (like "id&&" or "id &&") - BLOCKED
+                return 0
+                ;;
+            *"&&"*)
+                # Any command containing &&
+                # Check if it's a legitimate command chain (command before AND after &&)
+                if echo "$cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&&[[:space:]]*[a-zA-Z0-9]'; then
+                    # This looks like a legitimate command chain (e.g., "id && whoami")
+                    # Allow it to pass this check
+                    :
+                else
+                    # Suspicious && usage
+                    return 0
+                fi
+                ;;
+        esac
+
+        # Check for triple or more ampersands
+        if echo "$cmd" | grep -qE '&{3,}'; then
+            return 0
+        fi
         
         paren_open=$(echo "$cmd" | tr -cd '(' | wc -c)
         paren_close=$(echo "$cmd" | tr -cd ')' | wc -c)
@@ -191,17 +228,10 @@ EOF
             "|"|*" |"|*"|") 
                 return 0
                 ;;
-            "&&"|*" &&"|*"&& ") 
-                return 0
-                ;;
             "||"|*" ||"|*"|| ") 
                 return 0
                 ;;
         esac
-        
-        if echo "$cmd" | grep -qE '&{3,}'; then
-            return 0
-        fi
         
         return 1
     }
@@ -309,6 +339,41 @@ EOF
       case "$CMD" in
           \|[^a-zA-Z0-9\ ]*|*[^a-zA-Z0-9\ ]\|)
               # Pipe at start/end with non-alphanumeric chars
+              echo "We don't do that here."
+              exit 1
+              ;;
+      esac
+
+# ENHANCED && VALIDATION for -c mode
+      case "$CMD" in
+          "&&")
+              # Isolated && - dangerous
+              echo "We don't do that here."
+              exit 1
+              ;;
+          "&&"*)
+              # Commands starting with && (like "&&id" or "&& id") - BLOCKED
+              echo "We don't do that here."
+              exit 1
+              ;;
+          *"&&")
+              # Commands ending with && (like "id&&" or "id &&") - BLOCKED
+              echo "We don't do that here."
+              exit 1
+              ;;
+          *" && "|*" &&"|*"&& ")
+              # && with spacing - check if it's legitimate command chain
+              if echo "$CMD" | grep -qE '[a-zA-Z0-9][[:space:]]*&&[[:space:]]*[a-zA-Z0-9]'; then
+                  # Legitimate command chain (has commands before AND after &&), allow it
+                  :
+              else
+                  # Suspicious && usage
+                  echo "We don't do that here."
+                  exit 1
+              fi
+              ;;
+          *"&&&"*)
+              # Triple or more ampersands - always dangerous
               echo "We don't do that here."
               exit 1
               ;;
