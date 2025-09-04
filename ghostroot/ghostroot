@@ -17,7 +17,111 @@ Usage:
 EOF
 }
 
-        is_dangerous_command() {
+    # Enhanced validation function for consecutive command patterns
+    validate_consecutive_patterns() {
+        local cmd="$1"
+        
+        # Check for && followed by banned keywords
+        case "$cmd" in
+            *"&& if"*|*"&& fi"*|*"&& else"*|*"&& elif"*|*"&& then"*|*"&& while"*|*"&& do"*|*"&& done"*|*"&& for"*|*"&& until"*|*"&& case"*|*"&& esac"*|*"&& select"*|*"&& function"*|*"&& continue"*|*"&& break"*|*"&& logout"*|*"&& return"*|*"&& trap"*|*"&& unset"*)
+                return 0  # Dangerous
+                ;;
+        esac
+        
+        # Check for semicolon followed by banned keywords
+        case "$cmd" in
+            *"; if"*|*"; fi"*|*"; else"*|*"; elif"*|*"; then"*|*"; while"*|*"; do"*|*"; done"*|*"; for"*|*"; until"*|*"; case"*|*"; esac"*|*"; select"*|*"; function"*|*"; continue"*|*"; break"*|*"; logout"*|*"; return"*|*"; trap"*|*"; unset"*)
+                return 0  # Dangerous
+                ;;
+        esac
+        
+        # Check for patterns like "id; ;" (command followed by semicolon space semicolon)
+        if echo "$cmd" | grep -qE '[a-zA-Z0-9]; ;'; then
+            return 0  # Dangerous
+        fi
+        
+        # Check for multiple consecutive semicolons with any spacing
+        if echo "$cmd" | grep -qE ';[[:space:]]*;[[:space:]]*;'; then
+            return 0  # Dangerous (three or more semicolons)
+        fi
+        
+        # Check for && followed by single character commands or suspicious patterns
+        if echo "$cmd" | grep -qE '&&[[:space:]]*[a-zA-Z][[:space:]]*($|[;&|])'; then
+            return 0  # Patterns like "id && i" or "cmd && x;"
+        fi
+        
+        # Check for semicolon followed by control flow patterns
+        if echo "$cmd" | grep -qE ';[[:space:]]*\{|;[[:space:]]*\}|;[[:space:]]*\(|;[[:space:]]*\)'; then
+            return 0  # Patterns like "; {" or "; }"
+        fi
+        
+        # Check for && followed by control flow patterns  
+        if echo "$cmd" | grep -qE '&&[[:space:]]*\{|&&[[:space:]]*\}|&&[[:space:]]*\(|&&[[:space:]]*\)'; then
+            return 0  # Patterns like "&& {" or "&& }"
+        fi
+        
+        # Check for chained operators (combination of different operators)
+        if echo "$cmd" | grep -qE '(&&.*[;&|]|;.*[&|]|\|.*[;&])'; then
+            # Mixed operator chains can be dangerous
+            # Allow simple cases like "cmd && cmd | grep" but block complex mixed chains
+            if echo "$cmd" | grep -qE '(&&.*;|;.*&&|\|\|.*[;&]|[;&].*\|\|)'; then
+                return 0  # Dangerous mixed chains
+            fi
+        fi
+        
+        return 1  # Safe
+    }
+
+    # Word boundary validation for better keyword detection
+    validate_word_boundaries() {
+        local cmd="$1"
+        
+        # More precise detection of banned keywords using word boundaries
+        for banned in if fi else elif then while do done for until case esac select function continue break logout return trap unset; do
+            # Check if banned word appears as a complete word after && or ;
+            if echo "$cmd" | grep -qE "(&&|;)[[:space:]]+$banned([[:space:]]|$)"; then
+                return 0  # Dangerous
+            fi
+            
+            # Check if banned word appears at the start after && or ;
+            if echo "$cmd" | grep -qE "(&&|;)$banned([[:space:]]|$)"; then
+                return 0  # Dangerous  
+            fi
+        done
+        
+        return 1  # Safe
+    }
+
+    # Enhanced quote and escape validation
+    validate_quotes_and_escapes() {
+        local cmd="$1"
+        
+        # Check for quote injection patterns
+        case "$cmd" in
+            *"'"*"&&"*"'"*|*'"'*";"*"'"*)
+                # Single quotes around operators
+                return 0
+                ;;
+            *'"'*"&&"*'"'*|*'"'*";"*'"'*)
+                # Double quotes around operators  
+                return 0
+                ;;
+        esac
+        
+        # Check for escaped operator injection
+        if echo "$cmd" | grep -qE '\\(&&|;|\|)'; then
+            return 0  # Escaped operators
+        fi
+        
+        # Check for hex/octal encoded operators
+        if echo "$cmd" | grep -qE '\\x26\\x26|\\x3B|\\046\\046|\\073'; then
+            return 0  # Hex/octal encoded && or ;
+        fi
+        
+        return 1  # Safe
+    }
+
+    is_dangerous_command() {
         cmd="$1"
 
         first_word=$(echo "$cmd" | awk '{print $1}' | cut -d'=' -f1)
@@ -236,6 +340,23 @@ EOF
                 return 0
                 ;;
         esac
+        
+        # NEW ENHANCED VALIDATIONS - Add before the final return 1
+        
+        # Enhanced consecutive pattern validation
+        if validate_consecutive_patterns "$cmd"; then
+            return 0
+        fi
+        
+        # Enhanced word boundary validation  
+        if validate_word_boundaries "$cmd"; then
+            return 0
+        fi
+        
+        # Enhanced quote and escape validation
+        if validate_quotes_and_escapes "$cmd"; then
+            return 0
+        fi
         
         return 1
     }
@@ -532,6 +653,22 @@ EOF
       
       # ADDED: Check for real ESC character (ASCII 27)
       if printf '%s' "$CMD" | grep -q "$(printf '\033')"; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      # NEW ENHANCED VALIDATIONS for -c mode - Call the same validation functions
+      if validate_consecutive_patterns "$CMD"; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if validate_word_boundaries "$CMD"; then
+          echo "We don't do that here."
+          exit 1
+      fi
+      
+      if validate_quotes_and_escapes "$CMD"; then
           echo "We don't do that here."
           exit 1
       fi
