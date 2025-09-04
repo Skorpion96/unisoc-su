@@ -111,7 +111,7 @@ EOF
         case "$cmd" in
             *'$(('*|*'))'*|*'$['*|*']'*|*'${#'*|*'${!'*|*'${'*)
                 return 0 ;;
-            *"'"*";"*|*";"*"'"*|*'&>'*|*'<<<'*)
+            *'&>'*|*'<<<'*)
                 return 0 ;;
         esac
         
@@ -119,14 +119,10 @@ EOF
             return 0
         fi
         
-        # IMPROVED SEMICOLON VALIDATION (single set of rules)
+        # MINIMAL SEMICOLON VALIDATION - Only block the most dangerous patterns
         case "$cmd" in
             ";")
                 # Isolated semicolon - dangerous
-                return 0
-                ;;
-            *" ; "*|*" ;"*)
-                # Only block semicolon with space before AND after, or trailing space after semicolon
                 return 0
                 ;;
             *";;"*)
@@ -135,11 +131,19 @@ EOF
                 ;;
         esac
         
-        # ADDED: Check for semicolon followed directly by alphanumeric (command injection)
+        # Block semicolon directly followed by command (no space) - injection
         if echo "$cmd" | grep -qE ';[a-zA-Z0-9]'; then
             # Patterns like ;id ;whoami ;cat etc. (semicolon starting a command)
             return 0
         fi
+        
+        # Block dangerous semicolon patterns but allow legitimate ones
+        case "$cmd" in
+            "; "*) 
+                # Commands starting with "; " (like "; id") - injection attempt
+                return 0
+                ;;
+        esac
         
         # ADDED: Check for semicolon with dots patterns
         if echo "$cmd" | grep -qE '(;\.+|\.+;)'; then
@@ -159,7 +163,7 @@ EOF
             return 0
         fi
 
-        # SEMICOLON + REDIRECT VALIDATION (fixed variable name)
+        # SEMICOLON + REDIRECT VALIDATION
         # Check for semicolon followed by redirect operators
         if echo "$cmd" | grep -qE ';[<>]'; then
             # Patterns like ;> ;< ;<< ;>> etc.
@@ -178,7 +182,7 @@ EOF
             return 0
         fi
         
-        # ENHANCED PIPE VALIDATION (fixed variable name)
+        # ENHANCED PIPE VALIDATION
         # Check for pipes followed by non-alphanumeric characters (except valid pipe combinations)
         if echo "$cmd" | grep -qE '\|[^a-zA-Z0-9 ]'; then
             # Pipe followed by special characters like |. |, |: |; |/ etc.
@@ -379,6 +383,25 @@ EOF
               ;;
       esac
 
+      # MINIMAL SEMICOLON VALIDATION for -c mode
+      case "$CMD" in
+          ";")
+              # Isolated semicolon - dangerous
+              echo "We don't do that here."
+              exit 1
+              ;;
+          *";;"*)
+              # Double semicolon - dangerous
+              echo "We don't do that here."
+              exit 1
+              ;;
+          "; "*)
+              # Commands starting with "; " (injection attempt)
+              echo "We don't do that here."
+              exit 1
+              ;;
+      esac
+
       # SEMICOLON + COMMAND INJECTION CHECK for -c mode
       if echo "$CMD" | grep -qE ';[a-zA-Z0-9]'; then
           # Patterns like ;id ;whoami ;cat etc.
@@ -408,25 +431,6 @@ EOF
       # IMPROVED SECURITY CHECKS for -c mode
       case "$CMD" in
           *\`*|*'$('*|*'${'*|*'$(('*)
-              echo "We don't do that here."
-              exit 1
-              ;;
-      esac
-      
-      # SEMICOLON VALIDATION for -c mode (matching the function)
-      case "$CMD" in
-          ";")
-              # Isolated semicolon - dangerous
-              echo "We don't do that here."
-              exit 1
-              ;;
-          *" ; "*|*" ;"*)
-              # Only block specific suspicious patterns
-              echo "We don't do that here."
-              exit 1
-              ;;
-          *";;"*)
-              # Double semicolon - dangerous
               echo "We don't do that here."
               exit 1
               ;;
