@@ -686,39 +686,47 @@ EOF
     fi
 }
 
-# --- Service check before running main() ---
-SERVICE_STATE="$(getprop init.svc.cmd_services)"
-if [ "$SERVICE_STATE" != "running" ]; then
-    echo "Error: cmd_services not running."
-    echo "Please start it before running this script."
-    exit 1
-fi
-
-# --- Ping–response check ---
-BR_IN="/sdcard/rootbridge/in/command.txt"
-BR_OUT="/sdcard/rootbridge/out/result.txt"
-PING_TOKEN="GR_PING_$$"
-
-# Clear any old output
-> "$BR_OUT"
-
-# Send ping
-echo "echo $PING_TOKEN" > "$BR_IN"
-
-# Wait for up to 2 seconds for correct reply
-timeout=20  # 20 × 0.1s = 2 seconds
-while [ $timeout -gt 0 ]; do
-    if grep -q "$PING_TOKEN" "$BR_OUT"; then
-        break
+# --- Initialize and validate system only once ---
+init_system_checks() {
+    # Service check
+    SERVICE_STATE="$(getprop init.svc.cmd_services)"
+    if [ "$SERVICE_STATE" != "running" ]; then
+        echo "Error: cmd_services not running."
+        echo "Please start it before running this script."
+        exit 1
     fi
-    sleep 0.1
-    timeout=$((timeout - 1))
-done
 
-if [ $timeout -eq 0 ]; then
+    # Ping–response check
+    BR_IN="/sdcard/rootbridge/in/command.txt"
+    BR_OUT="/sdcard/rootbridge/out/result.txt"
+    PING_TOKEN="GR_PING_$$"
+
+    # Clear any old output
+    > "$BR_OUT"
+
+    # Send ping
+    echo "echo $PING_TOKEN" > "$BR_IN"
+
+    # Wait for up to 2 seconds for correct reply
+    timeout=20  # 20 × 0.1s = 2 seconds
+    while [ $timeout -gt 0 ]; do
+        if grep -q "$PING_TOKEN" "$BR_OUT"; then
+            export SYSTEM_INIT_DONE=1
+            return 0
+        fi
+        sleep 0.1
+        timeout=$((timeout - 1))
+    done
+
+    # If we reach here, ping failed
     echo "Error: rootbridge is not responding."
     echo "Please start rootbridge before running this script."
     exit 1
+}
+
+# Only run system checks once
+if [ -z "$SYSTEM_INIT_DONE" ]; then
+    init_system_checks
 fi
 
 main "$@"
