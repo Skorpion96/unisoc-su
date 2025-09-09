@@ -68,6 +68,9 @@ EOF
                 return 0  # Dangerous mixed chains
             fi
         fi
+    if echo "$cmd" | grep -qE '(^[<>]+[a-zA-Z0-9]|[a-zA-Z0-9][<>]+[a-zA-Z0-9]|[a-zA-Z0-9][<>]+$)'; then
+        return 0  # Dangerous - redirects without proper spacing
+    fi
         
         return 1  # Safe
     }
@@ -132,7 +135,7 @@ EOF
         done
         
         case "$cmd" in
-            *\`*|*"<("*|*">|"*)
+            *\`*|*"<("*|*">|"*|*">"|"<")
                 return 0
                 ;;
             *"&"*)
@@ -357,6 +360,11 @@ EOF
         if validate_quotes_and_escapes "$cmd"; then
             return 0
         fi
+
+        # Check for mixed redirect patterns
+        if echo "$cmd" | grep -qE '(><|<>|><<|>><<|<<>>|><<>)'; then
+            return 0  # Dangerous - mixed redirects
+        fi
         
         return 1
     }
@@ -548,6 +556,11 @@ EOF
           echo "We don't do that here."
           exit 1
       fi
+
+      if echo "$CMD" | grep -qE '(><|<>|><<|>><<|<<>>|><<>)'; then
+          echo "We don't do that here."
+          exit 1
+      fi
       
       # IMPROVED SECURITY CHECKS for -c mode
       case "$CMD" in
@@ -656,6 +669,9 @@ EOF
           echo "We don't do that here."
           exit 1
       fi
+    if echo "$cmd" | grep -qE '(^[<>]+[a-zA-Z0-9]|[a-zA-Z0-9][<>]+[a-zA-Z0-9]|[a-zA-Z0-9][<>]+$)'; then
+        return 0  # Dangerous - redirects without proper spacing
+    fi 
       
       # NEW ENHANCED VALIDATIONS for -c mode - Call the same validation functions
       if validate_consecutive_patterns "$CMD"; then
