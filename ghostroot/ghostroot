@@ -221,10 +221,9 @@ EOF
             *'$(('*|*'))'*|*'$['*|*']'*|*'${#'*|*'${!'*|*'${'*)
                 return 0 ;;
             *'&>'*|*'<<<'*)
-                #Remove the blanket block on &> - now handled above
                 case "$cmd" in
                     *'<<<'*)
-                        return 0  # Still block here-strings
+                        return 0
                         ;;
                 esac
                 ;;
@@ -365,8 +364,6 @@ EOF
                 ;;
         esac
         
-        # NEW ENHANCED VALIDATIONS - Add before the final return 1
-        
         # Enhanced consecutive pattern validation
         if validate_consecutive_patterns "$cmd"; then
             return 0
@@ -394,7 +391,7 @@ EOF
     }
 
     ghostshell() {
-        CURRENT_DIR=$(ghostroot -c toybox pwd -L 2>/dev/null)
+        CURRENT_DIR=$(ghostroot -c 'toybox pwd -L 2>/dev/null')
         [ -z "$CURRENT_DIR" ] && CURRENT_DIR="/"
         
         while :; do
@@ -430,7 +427,7 @@ EOF
             
             case "$CMD" in
                 cd|cd*)
-                    out=$(ghostroot -c toybox pwd -L 2>/dev/null)
+                    out=$(ghostroot -c 'toybox pwd -L 2>/dev/null')
                     [ -n "$out" ] && CURRENT_DIR="$out"
                     ;;
             esac
