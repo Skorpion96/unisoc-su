@@ -68,9 +68,6 @@ EOF
                 return 0  # Dangerous mixed chains
             fi
         fi
-    if echo "$cmd" | grep -qE '(^[<>]+[a-zA-Z0-9]|[a-zA-Z0-9][<>]+[a-zA-Z0-9]|[a-zA-Z0-9][<>]+$)'; then
-        return 0  # Dangerous - redirects without proper spacing
-    fi
         
         return 1  # Safe
     }
@@ -140,14 +137,19 @@ EOF
                 ;;
             *"&"*)
                 case "$cmd" in
-                    *"&>"*) 
-                        # Allow redirect operators like &>
+                    *"&>"*|*">&"*) 
+                        # Allow redirect operators like &>, >&, 2>&1, etc.
+                        ;;
+                    *[0-9]">&"[0-9]*|*">&"[0-9]*|*[0-9]">&")
+                        # Allow file descriptor redirections like 2>&1, 1>&2, >&2, 2>&
                         ;;
                     *"&&"*)
                         # Handle && validation separately below
                         ;;
                     *)
+                        # Check for background process operator (&) at the end
                         if echo "$cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&[[:space:]]*$'; then
+                            # Allow background processes like "command &"
                             :
                         else
                             return 0
@@ -219,7 +221,13 @@ EOF
             *'$(('*|*'))'*|*'$['*|*']'*|*'${#'*|*'${!'*|*'${'*)
                 return 0 ;;
             *'&>'*|*'<<<'*)
-                return 0 ;;
+                #Remove the blanket block on &> - now handled above
+                case "$cmd" in
+                    *'<<<'*)
+                        return 0  # Still block here-strings
+                        ;;
+                esac
+                ;;
         esac
         
         if echo "$cmd" | grep -q '[!]' && ! echo "$cmd" | grep -qE '(\$\([^\)]*\)|"[^"]*![^"]*")'; then
@@ -288,6 +296,10 @@ EOF
             # Multiple occurrences of these patterns
             return 0
         fi
+
+      if echo "$CMD" | grep -qE '(><|<>|><<|>><<|<<>>|><<>)'; then
+          return 0
+      fi
         
         # ENHANCED PIPE VALIDATION
         # Check for pipes followed by non-alphanumeric characters (except valid pipe combinations)
@@ -344,6 +356,15 @@ EOF
                 ;;
         esac
         
+        case "$cmd" in
+            "<"|*" <"|*"<") 
+                return 0
+                ;;
+            "<<"|*" <<"|*"<< ") 
+                return 0
+                ;;
+        esac
+        
         # NEW ENHANCED VALIDATIONS - Add before the final return 1
         
         # Enhanced consecutive pattern validation
@@ -361,9 +382,12 @@ EOF
             return 0
         fi
 
-        # Check for mixed redirect patterns
-        if echo "$cmd" | grep -qE '(><|<>|><<|>><<|<<>>|><<>)'; then
-            return 0  # Dangerous - mixed redirects
+        #Check for mixed redirect patterns - but allow standard redirections
+        if echo "$cmd" | grep -qE '(><|<>)'; then
+            # Only block truly dangerous mixed redirects, not standard ones
+            if ! echo "$cmd" | grep -qE '[0-9]?><[0-9]?|[0-9]?<>[0-9]?'; then
+                return 0  # Dangerous - invalid mixed redirects
+            fi
         fi
         
         return 1
@@ -477,7 +501,7 @@ EOF
               ;;
       esac
 
-# ENHANCED && VALIDATION for -c mode
+      #Enhanced && and & validation for -c mode
       case "$CMD" in
           "&&")
               # Isolated && - dangerous
@@ -509,6 +533,33 @@ EOF
               # Triple or more ampersands - always dangerous
               echo "We don't do that here."
               exit 1
+              ;;
+      esac
+
+      #Enhanced & validation for -c mode - Allow standard redirections
+      case "$CMD" in
+          *"&"*)
+              case "$CMD" in
+                  *"&>"*|*">&"*)
+                      # Allow redirect operators like &>, >&, etc.
+                      ;;
+                  *[0-9]">&"[0-9]*|*">&"[0-9]*|*[0-9]">&")
+                      # Allow file descriptor redirections like 2>&1, 1>&2, >&2, 2>&
+                      ;;
+                  *"&&"*)
+                      # Already handled above
+                      ;;
+                  *)
+                      # Check for background process operator (&) at the end
+                      if echo "$CMD" | grep -qE '[a-zA-Z0-9][[:space:]]*&[[:space:]]*$'; then
+                          # Allow background processes like "command &"
+                          :
+                      else
+                          echo "We don't do that here."
+                          exit 1
+                      fi
+                      ;;
+              esac
               ;;
       esac
 
@@ -555,6 +606,15 @@ EOF
           # Multiple occurrences of these patterns
           echo "We don't do that here."
           exit 1
+      fi
+
+      #Mixed redirect validation for -c mode
+      if echo "$CMD" | grep -qE '(><|<>)'; then
+          # Only block truly dangerous mixed redirects
+          if ! echo "$CMD" | grep -qE '[0-9]?><[0-9]?|[0-9]?<>[0-9]?'; then
+              echo "We don't do that here."
+              exit 1
+          fi
       fi
 
       if echo "$CMD" | grep -qE '(><|<>|><<|>><<|<<>>|><<>)'; then
@@ -669,9 +729,6 @@ EOF
           echo "We don't do that here."
           exit 1
       fi
-    if echo "$cmd" | grep -qE '(^[<>]+[a-zA-Z0-9]|[a-zA-Z0-9][<>]+[a-zA-Z0-9]|[a-zA-Z0-9][<>]+$)'; then
-        return 0  # Dangerous - redirects without proper spacing
-    fi 
       
       # NEW ENHANCED VALIDATIONS for -c mode - Call the same validation functions
       if validate_consecutive_patterns "$CMD"; then
