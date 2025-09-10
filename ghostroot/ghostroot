@@ -310,10 +310,10 @@ EOF
           else
               # Suspicious || usage
               case "$CMD" in
-                  "||"|*" ||"|*"|| "|"||*")
-                      return 0
-                      ;;
-              esac
+        "||"|*" ||"|*"|| "|"||*"|"||"*)
+        return 0
+        ;;
+          esac
           fi
       else
           # No || present, apply regular pipe validation
