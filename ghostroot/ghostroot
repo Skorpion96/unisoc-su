@@ -126,9 +126,9 @@ EOF
 
         first_word=$(echo "$cmd" | awk '{print $1}' | cut -d'=' -f1)
         for banned in $BANNED_CMDS; do
-            if [ "$first_word" = "$banned" ]; then
-                return 0
-            fi
+        if echo "$first_word" | grep -qE "^$banned([^a-zA-Z0-9]|$)"; then
+        return 0
+        fi
         done
         
         case "$cmd" in
@@ -402,6 +402,16 @@ EOF
             fi
         fi
         
+        # Check for banned keywords after pipe operators  
+        for banned in $BANNED_CMDS; do
+        if echo "$cmd" | grep -qE "\|[[:space:]]*$banned([[:space:]]|$)"; then
+        return 0
+        fi
+        if echo "$cmd" | grep -qE "\|\|[[:space:]]*$banned([[:space:]]|$)"; then
+        return 0  
+        fi
+        done
+
         return 1
     }
 
@@ -480,17 +490,28 @@ EOF
           exit 0
       fi
 
+      # Check first word for banned commands (should run early)
+      first_word=$(echo "$CMD" | awk '{print $1}' | cut -d'=' -f1)
+      for banned in if fi else elif then while do done for until case esac select function continue break logout return trap unset; do
+      if echo "$first_word" | grep -qE "^$banned([^a-zA-Z0-9]|$)"; then
+        echo "We don't do that here."
+        exit 1
+      fi
+      done
+
       # ENHANCED PIPE VALIDATION for -c mode
+      if ! echo "$CMD" | grep -qE '\|\|'; then
       if echo "$CMD" | grep -qE '\|[^a-zA-Z0-9 ]'; then
-          # Pipe followed by special characters
-          echo "We don't do that here."
-          exit 1
+        # Pipe followed by special characters
+        echo "We don't do that here."
+        exit 1
       fi
       
       if echo "$CMD" | grep -qE '[^a-zA-Z0-9 ]\|'; then
-          # Special characters followed by pipe
-          echo "We don't do that here."
-          exit 1
+        # Special characters followed by pipe
+        echo "We don't do that here."
+        exit 1
+      fi
       fi
       
       if echo "$CMD" | grep -qE '\|{3,}'; then
@@ -499,10 +520,10 @@ EOF
           exit 1
       fi
       
-      if echo "$CMD" | grep -qE '[[:punct:]]\|[[:punct:]]'; then
-          # Punctuation-pipe-punctuation patterns
-          echo "We don't do that here."
-          exit 1
+      if echo "$CMD" | grep -qE '[[:punct:]]\|[[:punct:]]' && ! echo "$CMD" | grep -qE '\|\|'; then
+      # Punctuation-pipe-punctuation patterns (but not ||)
+      echo "We don't do that here."
+      exit 1
       fi
       
       case "$CMD" in
@@ -512,6 +533,18 @@ EOF
               exit 1
               ;;
       esac
+
+      # Check for banned keywords after pipe operators
+      for banned in $BANNED_CMDS; do
+      if echo "$CMD" | grep -qE "\|[[:space:]]*$banned([[:space:]]|$)"; then
+        echo "We don't do that here."
+        exit 1
+      fi
+      if echo "$CMD" | grep -qE "\|\|[[:space:]]*$banned([[:space:]]|$)"; then
+        echo "We don't do that here."
+        exit 1
+      fi
+      done
 
       #Enhanced && and & validation for -c mode
       case "$CMD" in
