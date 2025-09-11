@@ -3,7 +3,7 @@
 main() {
     BR_IN="/sdcard/rootbridge/in/command.txt"
     BR_OUT="/sdcard/rootbridge/out/result.txt"
-    BANNED_CMDS="if fi else elif then while do done for until case esac select in function continue break logout return trap unset"
+    BANNED_CMDS="if fi else elif then while do done for until case esac select in function continue break logout return trap unset exec; exec:"
     DANGEROUS_PATTERNS="\` <( >| &"
 
     usage() {
