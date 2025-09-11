@@ -17,6 +17,34 @@ Usage:
 EOF
 }
 
+    # Function to handle exec commands safely
+    handle_exec_command() {
+        local cmd="$1"
+        local is_c_mode="$2"
+        
+        # Extract the command after 'exec'
+        local exec_cmd=$(echo "$cmd" | sed 's/^[[:space:]]*exec[[:space:]]*//')
+        
+        # If exec_cmd is empty, just run the original command (will likely show error)
+        if [ -z "$exec_cmd" ]; then
+            echo "$cmd" > "$BR_IN"
+            sleep 0.2
+            cat "$BR_OUT"
+        else
+            # Execute the command without exec
+            echo "$exec_cmd" > "$BR_IN"
+            sleep 0.2
+            cat "$BR_OUT"
+        fi
+        
+        # If in -c mode, exit normally. If in shell mode, continue the loop.
+        if [ "$is_c_mode" = "true" ]; then
+            return 0
+        else
+            return 1  # Continue shell loop
+        fi
+    }
+
     # Enhanced validation function for consecutive command patterns
     validate_consecutive_patterns() {
         local cmd="$1"
@@ -119,6 +147,19 @@ EOF
         fi
         
         return 1  # Safe
+    }
+
+    # Check if command starts with exec
+    is_exec_command() {
+        local cmd="$1"
+        case "$cmd" in
+            exec|exec\ *|exec$'\t'*)
+                return 0  # Is exec command
+                ;;
+            *)
+                return 1  # Not exec command
+                ;;
+        esac
     }
 
     is_dangerous_command() {
@@ -441,6 +482,12 @@ EOF
                 continue
             fi
             
+            # Handle exec commands specially
+            if is_exec_command "$CMD"; then
+                handle_exec_command "$CMD" "false"
+                continue
+            fi
+            
             if is_dangerous_command "$CMD"; then
                 echo "We don't do that here."
                 continue
@@ -487,6 +534,12 @@ EOF
 
       if [ "$CMD" = "help" ]; then
           usage
+          exit 0
+      fi
+
+      # Handle exec commands in -c mode
+      if is_exec_command "$CMD"; then
+          handle_exec_command "$CMD" "true"
           exit 0
       fi
 
