@@ -17,33 +17,316 @@ Usage:
 EOF
 }
 
-    # Function to handle exec commands safely
-    handle_exec_command() {
-        local cmd="$1"
-        local is_c_mode="$2"
-        
-        # Extract the command after 'exec'
-        local exec_cmd=$(echo "$cmd" | sed 's/^[[:space:]]*exec[[:space:]]*//')
-        
-        # If exec_cmd is empty, just run the original command (will likely show error)
-        if [ -z "$exec_cmd" ]; then
-            echo "$cmd" > "$BR_IN"
-            sleep 0.2
-            cat "$BR_OUT"
-        else
-            # Execute the command without exec
-            echo "$exec_cmd" > "$BR_IN"
-            sleep 0.2
-            cat "$BR_OUT"
-        fi
-        
-        # If in -c mode, exit normally. If in shell mode, continue the loop.
-        if [ "$is_c_mode" = "true" ]; then
+# Enhanced handle_exec_command function with complete validation
+handle_exec_command() {
+    local cmd="$1"
+    local is_c_mode="$2"
+    
+    # Extract the command after 'exec'
+    local exec_cmd=$(echo "$cmd" | sed 's/^[[:space:]]*exec[[:space:]]*//')
+
+    # Check for exec followed by banned keywords (existing check)
+    case "$cmd" in
+        *"exec if"*|*"exec fi"*|*"exec else"*|*"exec elif"*|*"exec then"*|*"exec while"*|*"exec do"*|*"exec done"*|*"exec for"*|*"exec until"*|*"exec case"*|*"exec esac"*|*"exec select"*|*"exec function"*|*"exec continue"*|*"exec break"*|*"exec logout"*|*"exec return"*|*"exec trap"*|*"exec unset"*)
+            echo "We don't do that here."
+            return 0  # Dangerous
+            ;;
+    esac
+    
+    # NEW: If exec_cmd is empty after extraction, it's dangerous
+    if [ -z "$exec_cmd" ]; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # NEW: Apply ALL the same validations that regular commands get
+    # This is the key fix - run the extracted command through all validation
+    
+    # 1. Check for dangerous patterns in the extracted command
+    case "$exec_cmd" in
+        *\`*|*"<("*|*">|"*|*">"|"<")
+            echo "We don't do that here."
             return 0
-        else
-            return 1  # Continue shell loop
+            ;;
+    esac
+    
+    # 2. Ampersand validation (same as main function)
+    case "$exec_cmd" in
+        *"&"*)
+            case "$exec_cmd" in
+                *"&>"*|*">&"*) 
+                    # Allow redirect operators like &>, >&, 2>&1, etc.
+                    ;;
+                *[0-9]">&"[0-9]*|*">&"[0-9]*|*[0-9]">&")
+                    # Allow file descriptor redirections like 2>&1, 1>&2, >&2, 2>&
+                    ;;
+                *"&&"*)
+                    # Enhanced && validation
+                    case "$exec_cmd" in
+                        "&&"|"&&"*|*"&&")
+                            echo "We don't do that here."
+                            return 0
+                            ;;
+                        *"&&"*)
+                            if ! echo "$exec_cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&&[[:space:]]*[a-zA-Z0-9]'; then
+                                echo "We don't do that here."
+                                return 0
+                            fi
+                            ;;
+                    esac
+                    ;;
+                *)
+                    # Check for background process operator (&) at the end
+                    if echo "$exec_cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&[[:space:]]*$'; then
+                        # Allow background processes like "command &"
+                        :
+                    else
+                        echo "We don't do that here."
+                        return 0
+                    fi
+                    ;;
+            esac
+            ;;
+    esac
+    
+    # 3. Triple or more ampersands check
+    if echo "$exec_cmd" | grep -qE '&{3,}'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 4. Bracket/brace/quote balance validation
+    paren_open=$(echo "$exec_cmd" | tr -cd '(' | wc -c)
+    paren_close=$(echo "$exec_cmd" | tr -cd ')' | wc -c)
+    brace_open=$(echo "$exec_cmd" | tr -cd '{' | wc -c) 
+    brace_close=$(echo "$exec_cmd" | tr -cd '}' | wc -c)
+    bracket_open=$(echo "$exec_cmd" | tr -cd '[' | wc -c)
+    bracket_close=$(echo "$exec_cmd" | tr -cd ']' | wc -c)
+    single_quotes=$(echo "$exec_cmd" | tr -cd "'" | wc -c)
+    double_quotes=$(echo "$exec_cmd" | tr -cd '"' | wc -c)
+    
+    if [ "$paren_open" -ne "$paren_close" ] || [ "$brace_open" -ne "$brace_close" ] || 
+       [ "$bracket_open" -ne "$bracket_close" ] || [ $((single_quotes % 2)) -ne 0 ] || 
+       [ $((double_quotes % 2)) -ne 0 ]; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 5. Shell expansion and substitution checks
+    case "$exec_cmd" in
+        *'$(('*|*'))'*|*'$['*|*']'*|*'${#'*|*'${!'*|*'${'*)
+            echo "We don't do that here."
+            return 0
+            ;;
+        *'&>'*|*'<<<'*)
+            case "$exec_cmd" in
+                *'<<<'*)
+                    echo "We don't do that here."
+                    return 0
+                    ;;
+            esac
+            ;;
+    esac
+    
+    # 6. History expansion check
+    if echo "$exec_cmd" | grep -q '[!]' && ! echo "$exec_cmd" | grep -qE '(\$\([^\)]*\)|"[^"]*![^"]*")'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 7. MINIMAL SEMICOLON VALIDATION
+    # Use grep like the other validations
+    if echo "$exec_cmd" | grep -qE '^;$'; then
+    echo "We don't do that here."
+    return 0
+    fi
+
+    if echo "$exec_cmd" | grep -qE '^; |;;'; then
+    echo "We don't do that here."
+    return 0
+    fi
+
+    # Block semicolon directly followed by command (no space) - injection
+    if echo "$exec_cmd" | grep -qE ';[a-zA-Z0-9]'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 8. SEMICOLON + REDIRECT VALIDATION
+    if echo "$exec_cmd" | grep -qE ';[<>]'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    if echo "$exec_cmd" | grep -qE '[<>];'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    if echo "$exec_cmd" | grep -qE '([<>];|;[<>]){2,}'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 9. Dots pattern validation
+    if echo "$exec_cmd" | grep -qE '(;\.+|\.+;)'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    if echo "$exec_cmd" | grep -qE '\.{3,}'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    if echo "$exec_cmd" | grep -qE '; [\.!/\\\]'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 10. Mixed redirect pattern validation
+    if echo "$exec_cmd" | grep -qE '(><|<>|><<|>><<|<<>>|><<>)'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 11. ENHANCED PIPE VALIDATION
+    if echo "$exec_cmd" | grep -qE '\|\|'; then
+        # Contains ||, check if it's legitimate
+        if ! echo "$exec_cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*\|\|[[:space:]]*[a-zA-Z0-9]'; then
+            case "$exec_cmd" in
+                "||"|*" ||"|*"|| "|"||*"|"||"*)
+                    echo "We don't do that here."
+                    return 0
+                    ;;
+            esac
         fi
-    }
+    else
+        # No || present, apply regular pipe validation
+        if echo "$exec_cmd" | grep -qE '\|[^a-zA-Z0-9 ]'; then
+            echo "We don't do that here."
+            return 0
+        fi
+        
+        if echo "$exec_cmd" | grep -qE '[^a-zA-Z0-9 ]\|'; then
+            echo "We don't do that here."
+            return 0
+        fi
+    fi
+    
+    if echo "$exec_cmd" | grep -qE '\|{3,}'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    if echo "$exec_cmd" | grep -qE '[[:punct:]]\|[[:punct:]]' && ! echo "$exec_cmd" | grep -qE '\|\|'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    case "$exec_cmd" in
+        \|[^a-zA-Z0-9\ ]*|*[^a-zA-Z0-9\ ]\|)
+            if ! echo "$exec_cmd" | grep -qE '\|\|'; then
+                echo "We don't do that here."
+                return 0
+            fi
+            ;;
+    esac
+    
+    case "$exec_cmd" in
+        "|"|*" |"|*"|"|"||"|*" ||"|*"|| ") 
+            echo "We don't do that here."
+            return 0
+            ;;
+        "<"|*" <"|*"<"|"<<"|*" <<"|*"<< ") 
+            echo "We don't do that here."
+            return 0
+            ;;
+    esac
+    
+    # 12. Backslash validation
+    case "$exec_cmd" in
+        "\\"|*"\\")
+            if [ "${exec_cmd#${exec_cmd%?}}" = "\\" ]; then
+                echo "We don't do that here."
+                return 0
+            fi
+            ;;
+    esac
+    
+    # 13. Apply the enhanced validation functions
+    if validate_consecutive_patterns "$exec_cmd"; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    if validate_word_boundaries "$exec_cmd"; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    if validate_quotes_and_escapes "$exec_cmd"; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 14. Check banned keywords in the extracted command
+    first_word=$(echo "$exec_cmd" | awk '{print $1}' | cut -d'=' -f1)
+    for banned in $BANNED_CMDS; do
+        if echo "$first_word" | grep -qE "^$banned([^a-zA-Z0-9]|$)"; then
+            echo "We don't do that here."
+            return 0
+        fi
+    done
+    
+    # 15. Check for banned keywords after pipe operators in extracted command
+    for banned in $BANNED_CMDS; do
+        if echo "$exec_cmd" | grep -qE "\|[[:space:]]*$banned([[:space:]]|$)"; then
+            echo "We don't do that here."
+            return 0
+        fi
+        if echo "$exec_cmd" | grep -qE "\|\|[[:space:]]*$banned([[:space:]]|$)"; then
+            echo "We don't do that here."
+            return 0  
+        fi
+    done
+    
+    # 16. ANSI escape sequence check
+    case "$exec_cmd" in
+        *"\\033"*|*"\\x1b"*|*"\\e"*)
+            echo "We don't do that here."
+            return 0
+            ;;
+    esac
+    
+    if printf '%s' "$exec_cmd" | grep -q "$(printf '\033')"; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # 17. Check for three or more consecutive quotes
+    if printf '%s\n' "$exec_cmd" | grep -q "'''"; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    if printf '%s\n' "$exec_cmd" | grep -q '"""'; then
+        echo "We don't do that here."
+        return 0
+    fi
+    
+    # ALL VALIDATIONS PASSED - Execute the command safely
+    echo "$exec_cmd" > "$BR_IN"
+    sleep 0.2
+    cat "$BR_OUT"
+    
+    # If in -c mode, exit normally. If in shell mode, continue the loop.
+    if [ "$is_c_mode" = "true" ]; then
+        return 0
+    else
+        return 1  # Continue shell loop
+    fi
+}
 
     # Enhanced validation function for consecutive command patterns
     validate_consecutive_patterns() {
