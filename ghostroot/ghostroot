@@ -39,9 +39,6 @@ handle_exec_command() {
         return 0
     fi
     
-    # NEW: Apply ALL the same validations that regular commands get
-    # This is the key fix - run the extracted command through all validation
-    
     # 1. Check for dangerous patterns in the extracted command
     case "$exec_cmd" in
         *\`*|*"<("*|*">|"*|*">"|"<")
