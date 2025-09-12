@@ -5,6 +5,7 @@ main() {
     BR_OUT="/sdcard/rootbridge/out/result.txt"
     BANNED_CMDS="if fi else elif then while do done for until case esac select in function continue break logout return trap unset exec; exec:"
     DANGEROUS_PATTERNS="\` <( >| &"
+    ERR="We don't do that here."
 
     usage() {
       cat <<EOF >&2
@@ -28,21 +29,21 @@ handle_exec_command() {
     # Check for exec followed by banned keywords (existing check)
     case "$cmd" in
         *"exec if"*|*"exec fi"*|*"exec else"*|*"exec elif"*|*"exec then"*|*"exec while"*|*"exec do"*|*"exec done"*|*"exec for"*|*"exec until"*|*"exec case"*|*"exec esac"*|*"exec select"*|*"exec function"*|*"exec continue"*|*"exec break"*|*"exec logout"*|*"exec return"*|*"exec trap"*|*"exec unset"*)
-            echo "We don't do that here."
+            echo $ERR
             return 0  # Dangerous
             ;;
     esac
     
     # NEW: If exec_cmd is empty after extraction, it's dangerous
     if [ -z "$exec_cmd" ]; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     # 1. Check for dangerous patterns in the extracted command
     case "$exec_cmd" in
         *\`*|*"<("*|*">|"*|*">"|"<")
-            echo "We don't do that here."
+            echo $ERR
             return 0
             ;;
     esac
@@ -61,12 +62,12 @@ handle_exec_command() {
                     # Enhanced && validation
                     case "$exec_cmd" in
                         "&&"|"&&"*|*"&&")
-                            echo "We don't do that here."
+                            echo $ERR
                             return 0
                             ;;
                         *"&&"*)
                             if ! echo "$exec_cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&&[[:space:]]*[a-zA-Z0-9]'; then
-                                echo "We don't do that here."
+                                echo $ERR
                                 return 0
                             fi
                             ;;
@@ -78,7 +79,7 @@ handle_exec_command() {
                         # Allow background processes like "command &"
                         :
                     else
-                        echo "We don't do that here."
+                        echo $ERR
                         return 0
                     fi
                     ;;
@@ -88,7 +89,7 @@ handle_exec_command() {
     
     # 3. Triple or more ampersands check
     if echo "$exec_cmd" | grep -qE '&{3,}'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
@@ -105,20 +106,20 @@ handle_exec_command() {
     if [ "$paren_open" -ne "$paren_close" ] || [ "$brace_open" -ne "$brace_close" ] || 
        [ "$bracket_open" -ne "$bracket_close" ] || [ $((single_quotes % 2)) -ne 0 ] || 
        [ $((double_quotes % 2)) -ne 0 ]; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     # 5. Shell expansion and substitution checks
     case "$exec_cmd" in
         *'$(('*|*'))'*|*'$['*|*']'*|*'${#'*|*'${!'*|*'${'*)
-            echo "We don't do that here."
+            echo $ERR
             return 0
             ;;
         *'&>'*|*'<<<'*)
             case "$exec_cmd" in
                 *'<<<'*)
-                    echo "We don't do that here."
+                    echo $ERR
                     return 0
                     ;;
             esac
@@ -127,63 +128,69 @@ handle_exec_command() {
     
     # 6. History expansion check
     if echo "$exec_cmd" | grep -q '[!]' && ! echo "$exec_cmd" | grep -qE '(\$\([^\)]*\)|"[^"]*![^"]*")'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     # 7. MINIMAL SEMICOLON VALIDATION
     # Use grep like the other validations
     if echo "$exec_cmd" | grep -qE '^;$'; then
-    echo "We don't do that here."
+    echo $ERR
     return 0
     fi
 
     if echo "$exec_cmd" | grep -qE '^; |;;'; then
-    echo "We don't do that here."
+    echo $ERR
     return 0
     fi
 
     # Block semicolon directly followed by command (no space) - injection
     if echo "$exec_cmd" | grep -qE ';[a-zA-Z0-9]'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
-    
+
+    #Block semicolon immediately followed by slash (no space)
+    if echo "$exec_cmd" | grep -qE ';/'; then
+        echo $ERR
+        return 0
+    fi
+
     # 8. SEMICOLON + REDIRECT VALIDATION
     if echo "$exec_cmd" | grep -qE ';[<>]'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     if echo "$exec_cmd" | grep -qE '[<>];'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     if echo "$exec_cmd" | grep -qE '([<>];|;[<>]){2,}'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     # 9. Dots pattern validation
     if echo "$exec_cmd" | grep -qE '(;\.+|\.+;)'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     if echo "$exec_cmd" | grep -qE '\.{3,}'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     if echo "$exec_cmd" | grep -qE '; [\.!/\\\]'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     # 10. Mixed redirect pattern validation
     if echo "$exec_cmd" | grep -qE '(><|<>|><<|>><<|<<>>|><<>)'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
@@ -193,7 +200,7 @@ handle_exec_command() {
         if ! echo "$exec_cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*\|\|[[:space:]]*[a-zA-Z0-9]'; then
             case "$exec_cmd" in
                 "||"|*" ||"|*"|| "|"||*"|"||"*)
-                    echo "We don't do that here."
+                    echo $ERR
                     return 0
                     ;;
             esac
@@ -201,30 +208,30 @@ handle_exec_command() {
     else
         # No || present, apply regular pipe validation
         if echo "$exec_cmd" | grep -qE '\|[^a-zA-Z0-9 ]'; then
-            echo "We don't do that here."
+            echo $ERR
             return 0
         fi
         
         if echo "$exec_cmd" | grep -qE '[^a-zA-Z0-9 ]\|'; then
-            echo "We don't do that here."
+            echo $ERR
             return 0
         fi
     fi
     
     if echo "$exec_cmd" | grep -qE '\|{3,}'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     if echo "$exec_cmd" | grep -qE '[[:punct:]]\|[[:punct:]]' && ! echo "$exec_cmd" | grep -qE '\|\|'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     case "$exec_cmd" in
         \|[^a-zA-Z0-9\ ]*|*[^a-zA-Z0-9\ ]\|)
             if ! echo "$exec_cmd" | grep -qE '\|\|'; then
-                echo "We don't do that here."
+                echo $ERR
                 return 0
             fi
             ;;
@@ -232,11 +239,11 @@ handle_exec_command() {
     
     case "$exec_cmd" in
         "|"|*" |"|*"|"|"||"|*" ||"|*"|| ") 
-            echo "We don't do that here."
+            echo $ERR
             return 0
             ;;
         "<"|*" <"|*"<"|"<<"|*" <<"|*"<< ") 
-            echo "We don't do that here."
+            echo $ERR
             return 0
             ;;
     esac
@@ -245,7 +252,7 @@ handle_exec_command() {
     case "$exec_cmd" in
         "\\"|*"\\")
             if [ "${exec_cmd#${exec_cmd%?}}" = "\\" ]; then
-                echo "We don't do that here."
+                echo $ERR
                 return 0
             fi
             ;;
@@ -253,17 +260,17 @@ handle_exec_command() {
     
     # 13. Apply the enhanced validation functions
     if validate_consecutive_patterns "$exec_cmd"; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     if validate_word_boundaries "$exec_cmd"; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     if validate_quotes_and_escapes "$exec_cmd"; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
@@ -271,7 +278,7 @@ handle_exec_command() {
     first_word=$(echo "$exec_cmd" | awk '{print $1}' | cut -d'=' -f1)
     for banned in $BANNED_CMDS; do
         if echo "$first_word" | grep -qE "^$banned([^a-zA-Z0-9]|$)"; then
-            echo "We don't do that here."
+            echo $ERR
             return 0
         fi
     done
@@ -279,11 +286,11 @@ handle_exec_command() {
     # 15. Check for banned keywords after pipe operators in extracted command
     for banned in $BANNED_CMDS; do
         if echo "$exec_cmd" | grep -qE "\|[[:space:]]*$banned([[:space:]]|$)"; then
-            echo "We don't do that here."
+            echo $ERR
             return 0
         fi
         if echo "$exec_cmd" | grep -qE "\|\|[[:space:]]*$banned([[:space:]]|$)"; then
-            echo "We don't do that here."
+            echo $ERR
             return 0  
         fi
     done
@@ -291,24 +298,24 @@ handle_exec_command() {
     # 16. ANSI escape sequence check
     case "$exec_cmd" in
         *"\\033"*|*"\\x1b"*|*"\\e"*)
-            echo "We don't do that here."
+            echo $ERR
             return 0
             ;;
     esac
     
     if printf '%s' "$exec_cmd" | grep -q "$(printf '\033')"; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     # 17. Check for three or more consecutive quotes
     if printf '%s\n' "$exec_cmd" | grep -q "'''"; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
     if printf '%s\n' "$exec_cmd" | grep -q '"""'; then
-        echo "We don't do that here."
+        echo $ERR
         return 0
     fi
     
@@ -586,6 +593,12 @@ handle_exec_command() {
             return 0
         fi
         
+        #Block semicolon immediately followed by slash (no space)
+        if echo "$cmd" | grep -qE ';/'; then
+        # Patterns like ;/bin ;/usr ;/ etc. (but allows "; /bin/sh")
+        return 0
+        fi
+
         # ADDED: Check for multiple dots (potential directory traversal when combined with other chars)
         if echo "$cmd" | grep -qE '\.{3,}'; then
             # Three or more consecutive dots
@@ -769,7 +782,7 @@ handle_exec_command() {
             fi
             
             if is_dangerous_command "$CMD"; then
-                echo "We don't do that here."
+                echo $ERR
                 continue
             fi
             
@@ -827,7 +840,7 @@ handle_exec_command() {
       first_word=$(echo "$CMD" | awk '{print $1}' | cut -d'=' -f1)
       for banned in if fi else elif then while do done for until case esac select function continue break logout return trap unset; do
       if echo "$first_word" | grep -qE "^$banned([^a-zA-Z0-9]|$)"; then
-        echo "We don't do that here."
+        echo $ERR
         exit 1
       fi
       done
@@ -836,33 +849,33 @@ handle_exec_command() {
       if ! echo "$CMD" | grep -qE '\|\|'; then
       if echo "$CMD" | grep -qE '\|[^a-zA-Z0-9 ]'; then
         # Pipe followed by special characters
-        echo "We don't do that here."
+        echo $ERR
         exit 1
       fi
       
       if echo "$CMD" | grep -qE '[^a-zA-Z0-9 ]\|'; then
         # Special characters followed by pipe
-        echo "We don't do that here."
+        echo $ERR
         exit 1
       fi
       fi
       
       if echo "$CMD" | grep -qE '\|{3,}'; then
           # Three or more consecutive pipes
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       if echo "$CMD" | grep -qE '[[:punct:]]\|[[:punct:]]' && ! echo "$CMD" | grep -qE '\|\|'; then
       # Punctuation-pipe-punctuation patterns (but not ||)
-      echo "We don't do that here."
+      echo $ERR
       exit 1
       fi
       
       case "$CMD" in
           \|[^a-zA-Z0-9\ ]*|*[^a-zA-Z0-9\ ]\|)
               # Pipe at start/end with non-alphanumeric chars
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
       esac
@@ -870,11 +883,11 @@ handle_exec_command() {
       # Check for banned keywords after pipe operators
       for banned in $BANNED_CMDS; do
       if echo "$CMD" | grep -qE "\|[[:space:]]*$banned([[:space:]]|$)"; then
-        echo "We don't do that here."
+        echo $ERR
         exit 1
       fi
       if echo "$CMD" | grep -qE "\|\|[[:space:]]*$banned([[:space:]]|$)"; then
-        echo "We don't do that here."
+        echo $ERR
         exit 1
       fi
       done
@@ -883,17 +896,17 @@ handle_exec_command() {
       case "$CMD" in
           "&&")
               # Isolated && - dangerous
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
           "&&"*)
               # Commands starting with && (like "&&id" or "&& id") - BLOCKED
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
           *"&&")
               # Commands ending with && (like "id&&" or "id &&") - BLOCKED
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
           *" && "|*" &&"|*"&& ")
@@ -903,13 +916,13 @@ handle_exec_command() {
                   :
               else
                   # Suspicious && usage
-                  echo "We don't do that here."
+                  echo $ERR
                   exit 1
               fi
               ;;
           *"&&&"*)
               # Triple or more ampersands - always dangerous
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
       esac
@@ -933,7 +946,7 @@ handle_exec_command() {
                           # Allow background processes like "command &"
                           :
                       else
-                          echo "We don't do that here."
+                          echo $ERR
                           exit 1
                       fi
                       ;;
@@ -945,17 +958,17 @@ handle_exec_command() {
       case "$CMD" in
           ";")
               # Isolated semicolon - dangerous
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
           *";;"*)
               # Double semicolon - dangerous
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
           "; "*)
               # Commands starting with "; " (injection attempt)
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
       esac
@@ -963,26 +976,33 @@ handle_exec_command() {
       # SEMICOLON + COMMAND INJECTION CHECK for -c mode
       if echo "$CMD" | grep -qE ';[a-zA-Z0-9]'; then
           # Patterns like ;id ;whoami ;cat etc.
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
 
       # SEMICOLON + REDIRECT VALIDATION for -c mode
       if echo "$CMD" | grep -qE ';[<>]'; then
           # Patterns like ;> ;< ;<< ;>> etc.
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
+      #Block semicolon immediately followed by slash in -c mode
+      if echo "$CMD" | grep -qE ';/'; then
+      # Patterns like ;/bin ;/usr ;/ etc. (but allows "; /bin/sh")
+      echo $ERR
+      exit 1
+      fi
+
       if echo "$CMD" | grep -qE '[<>];'; then
           # Patterns like >; <; >>; <<; etc.
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       if echo "$CMD" | grep -qE '([<>];|;[<>]){2,}'; then
           # Multiple occurrences of these patterns
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
 
@@ -990,20 +1010,20 @@ handle_exec_command() {
       if echo "$CMD" | grep -qE '(><|<>)'; then
           # Only block truly dangerous mixed redirects
           if ! echo "$CMD" | grep -qE '[0-9]?><[0-9]?|[0-9]?<>[0-9]?'; then
-              echo "We don't do that here."
+              echo $ERR
               exit 1
           fi
       fi
 
       if echo "$CMD" | grep -qE '(><|<>|><<|>><<|<<>>|><<>)'; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       # IMPROVED SECURITY CHECKS for -c mode
       case "$CMD" in
           *\`*|*'$('*|*'${'*|*'$(('*)
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
       esac
@@ -1011,33 +1031,33 @@ handle_exec_command() {
       # ADDED: Check for semicolon with dots patterns in -c mode
       if echo "$CMD" | grep -qE '(;\.+|\.+;)'; then
           # Patterns like ;. .; ...; ;.. etc.
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       # ADDED: Check for multiple consecutive dots
       if echo "$CMD" | grep -qE '\.{3,}'; then
           # Three or more consecutive dots (potential traversal)
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       # ADDED: Check for semicolon followed by space and special chars
       if echo "$CMD" | grep -qE '; [\.!/\\\]'; then
           # Semicolon followed by space and dangerous chars
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       # ADDED: Check for isolated or trailing backslashes (incomplete escapes)
       case "$CMD" in
           "\\")
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
           *"\\")
               if [ "${CMD#${CMD%?}}" = "\\" ]; then
-                  echo "We don't do that here."
+                  echo $ERR
                   exit 1
               fi
               ;;
@@ -1046,27 +1066,27 @@ handle_exec_command() {
       # ADDED: Check for unbalanced single quotes
       single_quotes_count=$(echo "$CMD" | tr -cd "'" | wc -c)
       if [ $((single_quotes_count % 2)) -ne 0 ]; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       # ADDED: Check for unbalanced double quotes
       double_quotes_count=$(echo "$CMD" | tr -cd '"' | wc -c)
       if [ $((double_quotes_count % 2)) -ne 0 ]; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
 
       # ADDED: Check for three or more consecutive quotes (injection attempt)
       if printf '%s\n' "$CMD" | grep -q "'''"; then
           # Three or more consecutive single quotes
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       if printf '%s\n' "$CMD" | grep -q '"""'; then
           # Three or more consecutive double quotes
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
@@ -1074,7 +1094,7 @@ handle_exec_command() {
       paren_open=$(echo "$CMD" | tr -cd '(' | wc -c)
       paren_close=$(echo "$CMD" | tr -cd ')' | wc -c)
       if [ "$paren_open" -ne "$paren_close" ]; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
@@ -1082,7 +1102,7 @@ handle_exec_command() {
       brace_open=$(echo "$CMD" | tr -cd '{' | wc -c) 
       brace_close=$(echo "$CMD" | tr -cd '}' | wc -c)
       if [ "$brace_open" -ne "$brace_close" ]; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
@@ -1090,42 +1110,42 @@ handle_exec_command() {
       bracket_open=$(echo "$CMD" | tr -cd '[' | wc -c)
       bracket_close=$(echo "$CMD" | tr -cd ']' | wc -c)
       if [ "$bracket_open" -ne "$bracket_close" ]; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       # ADDED: Check for ANSI escape sequences (POSIX compatible)
       case "$CMD" in
           *"\\033"*|*"\\x1b"*|*"\\e"*)
-              echo "We don't do that here."
+              echo $ERR
               exit 1
               ;;
       esac
       
       # ADDED: Check for real ESC character (ASCII 27)
       if printf '%s' "$CMD" | grep -q "$(printf '\033')"; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       # NEW ENHANCED VALIDATIONS for -c mode - Call the same validation functions
       if validate_consecutive_patterns "$CMD"; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       if validate_word_boundaries "$CMD"; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       if validate_quotes_and_escapes "$CMD"; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
       if is_dangerous_command "$CMD"; then
-          echo "We don't do that here."
+          echo $ERR
           exit 1
       fi
       
