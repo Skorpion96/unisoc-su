@@ -177,6 +177,12 @@ handle_exec_command() {
         echo $ERR
         return 0
     fi
+
+    # Block semicolon followed by special characters in exec commands
+    if echo "$exec_cmd" | grep -qE ';[?,:+_=*^%$#@~-]'; then
+       echo $ERR
+       return 0
+    fi
     
     if echo "$exec_cmd" | grep -qE '\.{3,}'; then
         echo $ERR
@@ -617,6 +623,11 @@ handle_exec_command() {
             # Patterns like ;> ;< ;<< ;>> etc.
             return 0
         fi
+
+        # Block semicolon followed by special characters
+        if echo "$cmd" | grep -qE ';[?,:+_=*^%$#@~-]'; then
+           return 0
+        fi
         
         # Check for redirect operators followed by semicolon
         if echo "$cmd" | grep -qE '[<>];'; then
@@ -992,6 +1003,12 @@ handle_exec_command() {
       # Patterns like ;/bin ;/usr ;/ etc. (but allows "; /bin/sh")
       echo $ERR
       exit 1
+      fi
+
+      # Block semicolon followed by special characters in -c mode
+      if echo "$CMD" | grep -qE ';[?,:+_=*^%$#@~-]'; then
+         echo $ERR
+         exit 1
       fi
 
       if echo "$CMD" | grep -qE '[<>];'; then
