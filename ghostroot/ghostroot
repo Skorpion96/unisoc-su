@@ -7,6 +7,15 @@ main() {
     DANGEROUS_PATTERNS="\` <( >| &"
     ERR="We don't do that here."
 
+    # Block Ctrl+\ (SIGQUIT) and other potentially dangerous signals
+trap_signals() {
+    trap 'printf "\n%s\n" "$ERR"' QUIT
+    trap 'printf "\n%s\n" "$ERR"' INT
+    trap 'printf "\n%s\n" "$ERR"' TSTP
+}
+
+trap_signals
+
     usage() {
       cat <<EOF >&2
 Usage:
