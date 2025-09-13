@@ -80,7 +80,7 @@ Demonstration
 
 https://github.com/user-attachments/assets/ce83fa97-01cc-40c4-9cb9-3837b7cb2c7f
 
-I also found a bypass for execution, works on both the ghostroot and on the cli (on the cli you must use a single command like: cd /data/ylog && exec busybox id). You have to copy a binary to /data/ylog that would be normally allowed in the system PATH or that in any case doesn't do actions that selinux would reject, so we can't disable selinux or run a su binary, in the same way shizuku can't run as it's app isn't one of the trusted clients. After that you chmod +x or 6777 then you "exec binary options". I wasn't expecting this bypass to work to be honest.
+I also found a bypass for execution, works on both the ghostroot and on the cli-pie (here you must use a single command like: cd /data/ylog && exec busybox id). You have to copy a binary to /data/ylog that would be normally allowed in the system PATH or that in any case doesn't do actions that selinux would reject, so we can't disable selinux or run a su binary, in the same way shizuku can't run as it's app isn't one of the trusted clients. After that you chmod +x or 6777 then you "exec binary options". I wasn't expecting this bypass to work to be honest.
 
 ![binary execution cmd_services](https://github.com/user-attachments/assets/057a6bec-1bd1-451a-aad3-9d7444464591)
 
