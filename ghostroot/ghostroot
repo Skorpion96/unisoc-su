@@ -162,8 +162,17 @@ handle_exec_command() {
 
     # Block semicolon directly followed by command (no space) - injection
     if echo "$temp_cmd" | grep -qE ';[a-zA-Z0-9]'; then
+    if echo "$temp_cmd" | grep -qE '[a-zA-Z0-9_/-]+;[a-zA-Z0-9_/-]+'; then
+    after_semicolon=$(echo "$temp_cmd" | sed 's/.*;//' | awk '{print $1}')
+    for banned in if fi else elif then while do done for until case esac select function continue break logout return trap unset; do
+    if echo "$after_semicolon" | grep -qE "^$banned([^a-zA-Z0-9]|$)"; then
         echo $ERR
         return 0
+    fi
+    done
+    else
+        return 0
+    fi
     fi
 
     #Block semicolon immediately followed by slash (no space)
@@ -621,10 +630,18 @@ handle_exec_command() {
                 ;;
         esac
         
-        # Block semicolon directly followed by command (no space) - injection - use temp_cmd
+        # Allow legitimate command sequences like "id;whoami" but block injection attempts
         if echo "$temp_cmd" | grep -qE ';[a-zA-Z0-9]'; then
-            # Patterns like ;id ;whoami ;cat etc. (semicolon starting a command)
-            return 0
+        if echo "$temp_cmd" | grep -qE '[a-zA-Z0-9_/-]+;[a-zA-Z0-9_/-]+'; then
+        after_semicolon=$(echo "$temp_cmd" | sed 's/.*;//' | awk '{print $1}')
+        for banned in if fi else elif then while do done for until case esac select function continue break logout return trap unset; do
+            if echo "$after_semicolon" | grep -qE "^$banned([^a-zA-Z0-9]|$)"; then
+                return 0
+            fi
+        done
+        else
+        return 0
+        fi
         fi
         
         # Block dangerous semicolon patterns but allow legitimate ones - use temp_cmd
@@ -1031,9 +1048,18 @@ handle_exec_command() {
 
       # SEMICOLON + COMMAND INJECTION CHECK for -c mode - Use TEMP_CMD
       if echo "$TEMP_CMD" | grep -qE ';[a-zA-Z0-9]'; then
-          # Patterns like ;id ;whoami ;cat etc.
-          echo $ERR
-          exit 1
+      if echo "$TEMP_CMD" | grep -qE '[a-zA-Z0-9_/-]+;[a-zA-Z0-9_/-]+'; then
+        after_semicolon=$(echo "$TEMP_CMD" | sed 's/.*;//' | awk '{print $1}')
+        for banned in if fi else elif then while do done for until case esac select function continue break logout return trap unset; do
+            if echo "$after_semicolon" | grep -qE "^$banned([^a-zA-Z0-9]|$)"; then
+                echo $ERR
+                exit 1
+            fi
+        done
+      else
+        echo $ERR
+        exit 1
+      fi
       fi
 
       # SEMICOLON + REDIRECT VALIDATION for -c mode - Use TEMP_CMD
