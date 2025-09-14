@@ -68,14 +68,18 @@ handle_exec_command() {
                     # Allow file descriptor redirections like 2>&1, 1>&2, >&2, 2>&
                     ;;
                 *"&&"*)
-                    # Enhanced && validation
+                    # MODIFIED: Enhanced && validation - Allow legitimate command chains
                     case "$exec_cmd" in
                         "&&"|"&&"*|*"&&")
                             echo $ERR
                             return 0
                             ;;
                         *"&&"*)
-                            if ! echo "$exec_cmd" | grep -qE '[a-zA-Z0-9][[:space:]]*&&[[:space:]]*[a-zA-Z0-9]'; then
+                            # Allow patterns like "id&&whoami" or "id && whoami"
+                            if echo "$exec_cmd" | grep -qE '[a-zA-Z0-9_/-]+[[:space:]]*&&[[:space:]]*[a-zA-Z0-9_/-]+'; then
+                                # Legitimate command chain - allow it
+                                :
+                            else
                                 echo $ERR
                                 return 0
                             fi
@@ -502,7 +506,21 @@ handle_exec_command() {
                         # Allow file descriptor redirections like 2>&1, 1>&2, >&2, 2>&
                         ;;
                     *"&&"*)
-                        # Handle && validation separately below
+                        # MODIFIED: Enhanced && validation - Allow legitimate command chains
+                        case "$cmd" in
+                            "&&"|"&&"*|*"&&")
+                                return 0
+                                ;;
+                            *"&&"*)
+                                # Allow patterns like "id&&whoami" or "id && whoami"
+                                if echo "$cmd" | grep -qE '[a-zA-Z0-9_/-]+[[:space:]]*&&[[:space:]]*[a-zA-Z0-9_/-]+'; then
+                                    # Legitimate command chain - allow it
+                                    :
+                                else
+                                    return 0
+                                fi
+                                ;;
+                        esac
                         ;;
                     *)
                         # Check for background process operator (&) at the end
