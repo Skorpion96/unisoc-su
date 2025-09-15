@@ -1153,7 +1153,12 @@ handle_exec_command() {
                   exit 1
               fi
               ;;
-      esac
+      *'\"'|*"\'")
+        # Block patterns like "\" or '\ (backslash before unmatched quote at end)
+              echo $ERR
+              exit 1
+        ;;
+       esac
       
       # ADDED: Check for unbalanced single quotes
       single_quotes_count=$(echo "$CMD" | tr -cd "'" | wc -c)
