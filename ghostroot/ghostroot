@@ -763,7 +763,11 @@ handle_exec_command() {
                     return 0
                 fi
                 ;;
-        esac
+        *'\"'|*"\'")
+        # Block patterns like "\" or '\ (backslash before unmatched quote at end)
+        return 0
+        ;;
+       esac
         
         case "$cmd" in
             "|"|*" |"|*"|") 
