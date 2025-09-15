@@ -453,11 +453,11 @@ handle_exec_command() {
         
         # Check for quote injection patterns (use temp_cmd for semicolon checks)
         case "$temp_cmd" in
-            *"'"*"&&"*"'"*|*'"'*";"*"'"*)
+            *"'"*"&&"*"'"*|*'"'"'"*)
                 # Single quotes around operators
                 return 0
                 ;;
-            *'"'*"&&"*'"'*|*'"'*";"*'"'*)
+            *'"'*"&&"*'"'*|*'"''"'*)
                 # Double quotes around operators  
                 return 0
                 ;;
