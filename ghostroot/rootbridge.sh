@@ -12,6 +12,9 @@ mkdir -p /sdcard/rootbridge/in /sdcard/rootbridge/out
 execute_in_channel() {
     local cmd="$1"
     echo "[root executing] $cmd"
+    if echo "$cmd" | grep -qE 'eval'; then
+        return 0
+    fi
     eval "$cmd" > /sdcard/rootbridge/out/result.txt 2>&1
     return 0
 }
