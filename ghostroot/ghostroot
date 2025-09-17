@@ -34,7 +34,7 @@ handle_exec_command() {
         echo $ERR
         return 0
     fi
-    # ALL VALIDATIONS PASSED - Execute the command safely
+    # Execute the command safely after extraction
     echo "$exec_cmd" > "$BR_IN"
     sleep 0.2
     cat "$BR_OUT"
