@@ -8,16 +8,32 @@
 
 static char CURRENT_DIR[512] = "/";
 
-void usage() {
-    fprintf(stderr,
+void show_help() {
+fprintf(stderr,
         "Usage:\n"
-        "  ghostroot -c <command>   Run a single root command\n"
-        "  ghostroot                Enter interactive ghostroot shell\n\n"
-        "Special commands inside shell:\n"
-        "  exit   -> exits rootbridge service\n"
-        "  q      -> quits ghostroot (you can re-enter later)\n"
-    );
+        "  ghostroot -c <command>   ->   run a single root command\n"
+        "  ghostroot                ->   enter interactive ghostroot shell\n"
+        "  <exit>                   ->   exits the rootbridge.sh\n"
+        "  <q>                      ->   exits the ghostroot, you can always enter again and resume\n"
+        "  <help>                   ->   show this help message\n"
+);
+}
+
+void usage() {
+    show_help();
     exit(1);
+}
+
+char *run_and_capture(const char *cmd);
+
+int check_cmd_services() {
+    char *service_state = run_and_capture("getprop init.svc.cmd_services");
+    if (strcmp(service_state, "running") != 0) {
+        fprintf(stderr, "Error: cmd_services not running.\n");
+        fprintf(stderr, "Please start it before running this program.\n");
+        return 0;
+    }
+    return 1;
 }
 
 int ping_check() {
@@ -95,7 +111,7 @@ void ghostshell() {
     // set initial pwd
     update_pwd();
 
-    printf("Welcome to the ghostroot shell (powered by cmd_skt root socket)\n");
+    printf("Welcome to the ghostroot shell (powered by cmd_skt root socket)\n\n");
     printf("Type 'q' to quit, 'exit' to stop rootbridge.\n\n");
 
     while (1) {
@@ -109,14 +125,18 @@ if (ps1 && strlen(ps1) > 0)
         cmd[strcspn(cmd, "\n")] = 0;
 
         if (strcmp(cmd, "q") == 0) {
-            printf("ghostroot shell exiting...\n");
+            printf("ghostroot shell provided by the Elite x Skorpion96\n");
             exit(0);
         }
         if (strcmp(cmd, "exit") == 0) {
             fp = fopen(BR_IN, "w");
             if (fp) { fprintf(fp, "exit\n"); fclose(fp); }
-            printf("The ghostroot will now exit as rootbridge got closed.\n");
+            printf("The ghostroot will now exit as the rootbridge.sh got closed.\n");
             exit(0);
+        }
+        if (strcmp(cmd, "help") == 0) {
+            show_help();
+            continue;
         }
         if (strlen(cmd) == 0) continue;
 
@@ -144,7 +164,10 @@ if (ps1 && strlen(ps1) > 0)
     }
 }
 
-int main(int argc, char *argv[]) {
+        int main(int argc, char *argv[]) {
+    if (!check_cmd_services()) {
+        return 1;
+    }
     if (!ping_check()) {
         fprintf(stderr, "Error: rootbridge is not responding.\n");
         fprintf(stderr, "Please start rootbridge before running this program.\n");

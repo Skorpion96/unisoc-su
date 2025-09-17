@@ -16,11 +16,11 @@ trap_signals
     usage() {
       cat <<EOF >&2
 Usage:
-  ghostroot -c <command>   # run a single root command
-  ghostroot                # enter interactive ghostroot shell
-  <exit>                   # exits the rootbridge.sh
-  <q>                      # exits the ghostroot, you can always enter again and resume
-  <help>                   # Show this help message
+  ghostroot -c <command>   ->   run a single root command
+  ghostroot                ->   enter interactive ghostroot shell
+  <exit>                   ->   exits the rootbridge.sh
+  <q>                      ->   exits the ghostroot, you can always enter again and resume
+  <help>                   ->   show this help message
 EOF
 }
 
