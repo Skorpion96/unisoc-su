@@ -90,12 +90,82 @@ void update_pwd() {
     }
 }
 
+// Function to check if command starts with "exec"
+int is_exec_command(const char *cmd) {
+    // Skip leading whitespace
+    while (*cmd == ' ' || *cmd == '\t') cmd++;
+    
+    // Check if command starts with "exec"
+    if (strncmp(cmd, "exec", 4) == 0) {
+        // Make sure it's followed by whitespace or end of string
+        char next = cmd[4];
+        return (next == ' ' || next == '\t' || next == '\0');
+    }
+    return 0;
+}
+
+// Function to safely execute exec commands
+void handle_exec_command(const char *cmd) {
+    FILE *fp;
+    char modified_cmd[1024];
+    char outbuf[1024];
+    
+    // Wrap the exec command in a subshell to prevent it from replacing the main process
+    snprintf(modified_cmd, sizeof(modified_cmd), "sh -c '%s'", cmd);
+    
+    // Send modified command to rootbridge
+    fp = fopen(BR_IN, "w");
+    if (!fp) { 
+        perror("fopen BR_IN"); 
+        return; 
+    }
+    fprintf(fp, "%s\n", modified_cmd);
+    fclose(fp);
+
+    usleep(200000);
+
+    // Read result
+    fp = fopen(BR_OUT, "r");
+    if (fp) {
+        while (fgets(outbuf, sizeof(outbuf), fp)) {
+            fputs(outbuf, stdout);
+        }
+        fclose(fp);
+    }
+}
+
+// Function to execute regular commands
+void execute_command(const char *cmd) {
+    FILE *fp;
+    char outbuf[1024];
+    
+    // Send to rootbridge
+    fp = fopen(BR_IN, "w");
+    if (!fp) { 
+        perror("fopen BR_IN"); 
+        return; 
+    }
+    fprintf(fp, "%s\n", cmd);
+    fclose(fp);
+
+    usleep(200000);
+
+    // Read result
+    fp = fopen(BR_OUT, "r");
+    if (fp) {
+        while (fgets(outbuf, sizeof(outbuf), fp)) {
+            fputs(outbuf, stdout);
+        }
+        fclose(fp);
+    }
+}
+
 void ghostshell() {
     char cmd[1024];
-    char outbuf[1024];
+    FILE *fp;
 
-        char device[128];
-    FILE *fp = popen("getprop ro.product.device", "r");
+    char device[128];
+    fp = popen("getprop ro.product.device", "r");
     if (fp) {
         if (fgets(device, sizeof(device), fp) != NULL) {
             device[strcspn(device, "\n")] = 0;
@@ -106,7 +176,6 @@ void ghostshell() {
     } else {
         strcpy(device, "/");
     }
-    char *ps1    = run_and_capture("ghostroot -c 'echo $PS1'");
 
     // set initial pwd
     update_pwd();
@@ -116,10 +185,8 @@ void ghostshell() {
 
     while (1) {
         // Print prompt
-// Print prompt
-printf("%s:%s # ", device, CURRENT_DIR);
-fflush(stdout);
-if (ps1 && strlen(ps1) > 0)
+        printf("%s:%s # ", device, CURRENT_DIR);
+        fflush(stdout);
 
         if (!fgets(cmd, sizeof(cmd), stdin)) break;
         cmd[strcspn(cmd, "\n")] = 0;
@@ -140,31 +207,21 @@ if (ps1 && strlen(ps1) > 0)
         }
         if (strlen(cmd) == 0) continue;
 
-        // send to rootbridge
-        fp = fopen(BR_IN, "w");
-        if (!fp) { perror("fopen BR_IN"); continue; }
-        fprintf(fp, "%s\n", cmd);
-        fclose(fp);
-
-        usleep(200000);
-
-        // read result
-        fp = fopen(BR_OUT, "r");
-        if (fp) {
-            while (fgets(outbuf, sizeof(outbuf), fp)) {
-                fputs(outbuf, stdout);
-            }
-            fclose(fp);
+        // Check if it's an exec command and handle appropriately
+        if (is_exec_command(cmd)) {
+            handle_exec_command(cmd);
+        } else {
+            execute_command(cmd);
         }
 
-        // update CURRENT_DIR only if cmd is cd
+        // Update CURRENT_DIR only if cmd is cd
         if (strncmp(cmd, "cd", 2) == 0) {
             update_pwd();
         }
     }
 }
 
-        int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) {
     if (!check_cmd_services()) {
         return 1;
     }
@@ -177,27 +234,37 @@ if (ps1 && strlen(ps1) > 0)
     if (argc == 1) {
         ghostshell();
     } else if (argc > 2 && strcmp(argv[1], "-c") == 0) {
-        FILE *fp = fopen(BR_IN, "w");
-        if (!fp) { perror("fopen BR_IN"); return 1; }
-        for (int i=2; i<argc; i++) {
-            fprintf(fp, "%s ", argv[i]);
+        FILE *fp;
+        char combined_cmd[1024] = "";
+        
+        // Combine all arguments after -c
+        for (int i = 2; i < argc; i++) {
+            strcat(combined_cmd, argv[i]);
+            if (i < argc - 1) strcat(combined_cmd, " ");
         }
-        fprintf(fp, "\n");
-        fclose(fp);
-
-        usleep(200000);
-
-        fp = fopen(BR_OUT, "r");
-        if (fp) {
-            char line[1024];
-            while (fgets(line, sizeof(line), fp)) {
-                fputs(line, stdout);
-            }
+        
+        // Check if it's an exec command and handle appropriately
+        if (is_exec_command(combined_cmd)) {
+            handle_exec_command(combined_cmd);
+        } else {
+            fp = fopen(BR_IN, "w");
+            if (!fp) { perror("fopen BR_IN"); return 1; }
+            fprintf(fp, "%s\n", combined_cmd);
             fclose(fp);
+
+            usleep(200000);
+
+            fp = fopen(BR_OUT, "r");
+            if (fp) {
+                char line[1024];
+                while (fgets(line, sizeof(line), fp)) {
+                    fputs(line, stdout);
+                }
+                fclose(fp);
+            }
         }
     } else {
         usage();
     }
     return 0;
 }
-
