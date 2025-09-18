@@ -2,11 +2,39 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define BR_IN  "/sdcard/rootbridge/in/command.txt"
 #define BR_OUT "/sdcard/rootbridge/out/result.txt"
 
 static char CURRENT_DIR[512] = "/";
+static const char *ERR_MSG = "We don't do that here.";
+
+// Global flag for signal handling
+volatile sig_atomic_t signal_received = 0;
+
+// Signal handler function - keep it minimal and safe
+void signal_handler(int sig) {
+    signal_received = sig;
+    // Re-install the handler (some systems need this)
+    signal(sig, signal_handler);
+}
+
+// Setup signal traps
+void trap_signals() {
+    signal(SIGINT, signal_handler);   // Ctrl+C
+    signal(SIGQUIT, signal_handler);  // Ctrl+backslash
+    signal(SIGTSTP, SIG_IGN);         // Ignore Ctrl+Z completely
+}
+
+// Check and handle any received signals
+void check_signals() {
+    if (signal_received) {
+        printf("\n%s\n", ERR_MSG);
+        signal_received = 0; // Reset flag
+    }
+}
+
 
 void show_help() {
 fprintf(stderr,
@@ -164,6 +192,9 @@ void ghostshell() {
     char cmd[1024];
     FILE *fp;
 
+// Setup signal traps
+    trap_signals();
+
     char device[128];
     fp = popen("getprop ro.product.device", "r");
     if (fp) {
@@ -184,12 +215,16 @@ void ghostshell() {
     printf("Type 'q' to quit, 'exit' to stop rootbridge.\n\n");
 
     while (1) {
+    check_signals();
         // Print prompt
         printf("%s:%s # ", device, CURRENT_DIR);
         fflush(stdout);
 
         if (!fgets(cmd, sizeof(cmd), stdin)) break;
         cmd[strcspn(cmd, "\n")] = 0;
+
+        // Check for signals again after input
+        check_signals();
 
         if (strcmp(cmd, "q") == 0) {
             printf("ghostroot shell provided by the Elite x Skorpion96\n");
@@ -241,6 +276,12 @@ int main(int argc, char *argv[]) {
         for (int i = 2; i < argc; i++) {
             strcat(combined_cmd, argv[i]);
             if (i < argc - 1) strcat(combined_cmd, " ");
+        }
+
+        // Check if it's help command
+        if (strcmp(combined_cmd, "help") == 0) {
+            show_help();
+            return 0;
         }
         
         // Check if it's an exec command and handle appropriately
