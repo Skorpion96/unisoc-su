@@ -6,12 +6,20 @@ if [ "$(whoami)" != "system" ]; then
 fi
 
 # Try to glob the directory
+found=""
 for dir in /data/app/com.sammy.systools*/lib/arm*; do
     if [ -d "$dir" ]; then
         export PATH="$dir:$PATH"
+        found=1
         break
     fi
 done
+
+# Fallback if not found
+if [ -z "$found" ]; then
+  echo "Error: com.sammy.systools library path not found, install the app before running this script."
+  return 0
+fi
 
 echo "Welcome to the Unisoc-SU Shell (aka CVE-2022-47339 reborn in 2025)"
 cli-pie
