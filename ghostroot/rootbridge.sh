@@ -1,7 +1,7 @@
 #!/bin/sh
 if [ "$(whoami)" != "root" ]; then
     echo "This script must be run as the root user (UID 0) on the cmd_services shell, run unisoc-su before running this script."
-    exit 1
+    return 0
 fi
 
 HOME=/
