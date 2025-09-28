@@ -6,7 +6,7 @@ USER=$(whoami)
 # Check for supported users
 if [ "$USER" != "system" ] && [ "$USER" != "shell" ] && [ "$USER" != "root" ]; then
   echo "Error: Unsupported user $USER"
-  exit 1
+  return 0
 fi
 
 SYS_TOOLS_SET=$(echo $SYS_TOOLS)
