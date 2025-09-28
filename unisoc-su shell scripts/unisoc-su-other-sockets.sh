@@ -10,7 +10,7 @@ SYS_TOOLS=$(find /data/app -type d \( -path "*/com.sammy.systools*/lib/arm64" -o
 
 # Fallback if not found
 if [ -z "$SYS_TOOLS" ]; then
-  echo "Error: com.sammy.systools library path not found, install the app before running this script. If you didn't understand how the exploit works run one of the tutorial scripts or read the README.md/watch the video tutorials carefully."
+  echo "Error: com.sammy.systools library path not found, install the app before running this script."
   exit 1
 fi
 
