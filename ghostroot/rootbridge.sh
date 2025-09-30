@@ -16,6 +16,10 @@ execute_in_channel() {
     echo "We don't do that here." > /sdcard/rootbridge/out/result.txt
         return 1
     fi
+    if echo "$cmd" | grep -qE '^exit [0-9]'; then
+    echo "We don't do that here." > /sdcard/rootbridge/out/result.txt
+        return 1
+    fi
     eval "$cmd" > /sdcard/rootbridge/out/result.txt 2>&1
     return 0
 }
