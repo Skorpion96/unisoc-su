@@ -24,6 +24,22 @@ Usage:
 EOF
 }
 
+# Check if command contains unsafe exit usage
+is_safe_exit() {
+    local cmd="$1"
+        if [ "$cmd" = "exit" ]; then
+            return 0  # Safe
+        fi
+        if echo "$cmd" | grep -qE '\bexit\b'; then
+            if echo "$cmd" | grep -qE '(echo|printf|cat).*["\x27].*exit.*["\x27]'; then
+                return 0  # Safe - exit in quotes
+            else
+                return 1  # Unsafe - exit in dangerous context
+            fi
+        fi        
+     return 0
+}
+
 handle_exec_command() {
     local cmd="$1"
     local is_c_mode="$2"
@@ -34,6 +50,15 @@ handle_exec_command() {
         echo $ERR
         return 0
     fi
+        # Check for unsafe exit in exec command
+        if ! is_safe_exit "$exec_cmd"; then
+            echo "$ERR"
+            if [ "$is_c_mode" = "true" ]; then
+                return 0
+            else
+                return 1
+            fi
+        fi
     # Execute the command safely after extraction
     echo "$exec_cmd" > "$BR_IN"
     sleep 0.2
@@ -85,6 +110,11 @@ ghostshell() {
                 usage
                 continue
             fi
+            # Check for unsafe exit usage before processing
+            if ! is_safe_exit "$CMD"; then
+                echo "$ERR"
+                continue
+            fi
             if is_exec_command "$CMD"; then
                 handle_exec_command "$CMD" "false"
                 continue
@@ -132,6 +162,11 @@ ghostshell() {
       if [ "$CMD" = "help" ]; then
           usage
           exit 0
+      fi
+      # Check for unsafe exit usage in -c mode
+      if [ "$CMD" != "exit" ] && ! is_safe_exit "$CMD"; then
+          echo "$ERR"
+          exit 1
       fi
 # Handle exec commands in -c mode
       if is_exec_command "$CMD"; then
