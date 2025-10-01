@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <ctype.h>
 
 #define BR_IN  "/sdcard/rootbridge/in/command.txt"
 #define BR_OUT "/sdcard/rootbridge/out/result.txt"
@@ -34,7 +35,6 @@ void check_signals() {
         signal_received = 0; // Reset flag
     }
 }
-
 
 void show_help() {
 fprintf(stderr,
@@ -132,11 +132,92 @@ int is_exec_command(const char *cmd) {
     return 0;
 }
 
+// Function to check if a command contains 'exit' as a word boundary
+int contains_exit_word(const char *str) {
+    const char *p = str;
+    while ((p = strstr(p, "exit")) != NULL) {
+        // Check if it's a word boundary before
+        int before_ok = (p == str || !isalnum((unsigned char)*(p-1)) && *(p-1) != '_');
+        // Check if it's a word boundary after
+        int after_ok = (!isalnum((unsigned char)*(p+4)) && *(p+4) != '_');
+        
+        if (before_ok && after_ok) {
+            return 1;
+        }
+        p++;
+    }
+    return 0;
+}
+
+// Function to check if exit is within quotes (echo, printf, cat commands)
+int is_exit_in_safe_context(const char *cmd) {
+    // Check if command starts with echo, printf, or cat
+    const char *p = cmd;
+    while (*p == ' ' || *p == '\t') p++;
+    
+    if (strncmp(p, "echo", 4) == 0 || 
+        strncmp(p, "printf", 6) == 0 || 
+        strncmp(p, "cat", 3) == 0) {
+        
+        // Look for exit within quotes
+        const char *q = p;
+        int in_single_quote = 0;
+        int in_double_quote = 0;
+        
+        while (*q) {
+            if (*q == '\'' && !in_double_quote) {
+                in_single_quote = !in_single_quote;
+            } else if (*q == '"' && !in_single_quote) {
+                in_double_quote = !in_double_quote;
+            } else if (*q == 'e' && (in_single_quote || in_double_quote)) {
+                // Check if this is "exit" within quotes
+                if (strncmp(q, "exit", 4) == 0) {
+                    return 1;
+                }
+            }
+            q++;
+        }
+    }
+    return 0;
+}
+
+// Check if command contains unsafe exit usage
+// Returns 1 if safe, 0 if unsafe
+int is_safe_exit(const char *cmd) {
+    // Skip leading whitespace
+    const char *p = cmd;
+    while (*p == ' ' || *p == '\t') p++;
+    
+    // If command is exactly "exit", it's safe (handled specially)
+    if (strcmp(p, "exit") == 0) {
+        return 1;
+    }
+    
+    // Check if command contains 'exit' as a word
+    if (contains_exit_word(cmd)) {
+        // If exit is in a safe context (within quotes in echo/printf/cat), it's safe
+        if (is_exit_in_safe_context(cmd)) {
+            return 1;
+        }
+        // Otherwise, it's unsafe
+        return 0;
+    }
+    
+    // No 'exit' found, so it's safe
+    return 1;
+}
+
 // Function to safely execute exec commands
 void handle_exec_command(const char *cmd) {
     FILE *fp;
     char modified_cmd[1024];
     char outbuf[1024];
+    
+    // Check for unsafe exit usage
+    if (!is_safe_exit(cmd)) {
+        fprintf(stderr, "We don't do that here.\n");
+        return;
+    }
     
     // Wrap the exec command in a subshell to prevent it from replacing the main process
     snprintf(modified_cmd, sizeof(modified_cmd), "sh -c '%s'", cmd);
@@ -167,6 +248,12 @@ void execute_command(const char *cmd) {
     FILE *fp;
     char outbuf[1024];
     
+    // Check for unsafe exit usage
+    if (!is_safe_exit(cmd)) {
+        fprintf(stderr, "We don't do that here.\n");
+        return;
+    }
+    
     // Send to rootbridge
     fp = fopen(BR_IN, "w");
     if (!fp) { 
@@ -192,7 +279,7 @@ void ghostshell() {
     char cmd[1024];
     FILE *fp;
 
-// Setup signal traps
+    // Setup signal traps
     trap_signals();
 
     char device[128];
@@ -215,7 +302,7 @@ void ghostshell() {
     printf("Type 'q' to quit, 'exit' to stop rootbridge.\n\n");
 
     while (1) {
-    check_signals();
+        check_signals();
         // Print prompt
         printf("%s:%s # ", device, CURRENT_DIR);
         fflush(stdout);
@@ -282,6 +369,12 @@ int main(int argc, char *argv[]) {
         if (strcmp(combined_cmd, "help") == 0) {
             show_help();
             return 0;
+        }
+        
+        // Check for unsafe exit usage
+        if (!is_safe_exit(combined_cmd)) {
+            fprintf(stderr, "We don't do that here.\n");
+            return 1;
         }
         
         // Check if it's an exec command and handle appropriately
