@@ -27,17 +27,17 @@ EOF
 # Check if command contains unsafe exit usage
 is_safe_exit() {
     local cmd="$1"
-        if [ "$cmd" = "exit" ]; then
-            return 0  # Safe
+    if [ "$cmd" = "exit" ]; then
+        return 0
+    fi
+    if echo "$cmd" | grep -qE '\bexit\b'; then
+        if echo "$cmd" | grep -qE "(echo|printf|cat)[[:space:]].*[\"'].*exit.*[\"']"; then
+            return 0
+        else
+            return 1
         fi
-        if echo "$cmd" | grep -qE '\bexit\b'; then
-            if echo "$cmd" | grep -qE '(echo|printf|cat).*["\x27].*exit.*["\x27]'; then
-                return 0  # Safe - exit in quotes
-            else
-                return 1  # Unsafe - exit in dangerous context
-            fi
-        fi        
-     return 0
+    fi    
+    return 0
 }
 
 handle_exec_command() {
