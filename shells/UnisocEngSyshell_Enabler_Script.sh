@@ -54,7 +54,7 @@ echo "Unlocking the principal EMode activity with a workaround\n"
 setprop persist.sys.snd.level.pwd 1
 echo "Not really needed but let's unlock as well EMode entirely, in case this will also unlock other sprd based apps like YLog (com.sprd.logmanager), com.sprd.validationtools, com.sprd.camta, com.emode.cameratest (com.zte.burntest.camera), com.zte.flagreset, and more...\n"
 setprop persist.sys.emode.enable 1
-echo "On Phone Dialer digit *#*#983#*#* to enable EMode Keypad, then press any key to continue..."
+echo "On Phone Dialer digit *#*#983#*#* to open EMode Keypad, then press any key to continue..."
 read -n 1 -s
 echo "On EMode Keypad digit *983*673636# to enable EMode, then press any key to continue..."
 read -n 1 -s
