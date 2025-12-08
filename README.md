@@ -29,7 +29,7 @@ Here are provided various scripts for unisoc-su, one without tutorial: unisoc-su
 About GhostRoot (Post-Exploit Root Channel)
 A stealthy post-exploit command channel that survives in RAM and accepts input from any unprivileged app via file-based I/O.
 
-The exploit works up to Android 13 as on later versions unisoc removed the sharedUserId tag from the EngineerMode app and so now it's a normal user app, this makes selinux deny execution of the [cli-pie](https://github.com/TomKing062/cmd_services_client/releases) on android 14 and on Android 15.
+The exploit works up to Android 13 as on later versions unisoc removed the sharedUserId tag from the EngineerMode app and so now it's a normal user app, this makes selinux deny execution of the [cli-pie](https://github.com/TomKing062/cmd_services_client/releases) on android 14 and up.
 
 ![SharedUid-NormalUid_Compare-Patch](https://github.com/user-attachments/assets/fb757f06-e94a-4a78-8d64-434077a706cf)
 Image Provided by [TomKing062](https://github.com/TomKing062)
