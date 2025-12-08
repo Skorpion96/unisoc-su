@@ -8,7 +8,7 @@ Let's start with a joke
 ![9u4d2i](https://github.com/user-attachments/assets/2efc4cec-be56-4666-95b4-b0a4e354aa9a)
 
 
-Yes, you are not dreaming. Today i want to present you an exploit for a system shell on com.sprd.engineermode app and since it is one of the trusted clients of cmd_skt i was also able to enter it as well. This socket is part of a service running as root (cmd_services), so yes, i’m glad to present you unisoc-su. Here I'll provide a list of the trusted clients of cmd_skt extracted from cmd_services binary with ghidra which shows com.sprd.engineermode is present:
+Yes, you are not dreaming. Today i want to present you an exploit for a system shell on com.sprd.engineermode app and since it is one of the trusted clients of cmd_skt i was also able to enter it as well. This socket is part of a service running as root (cmd_services), so yes, i’m glad to present you unisoc-su. Here you can see a list of the trusted clients of cmd_skt extracted from cmd_services binary with ghidra which shows com.sprd.engineermode is present:
 
 
 ![cmd_services apps](https://github.com/user-attachments/assets/b42ece1e-3f7a-460f-b871-3859fa9a579c)
