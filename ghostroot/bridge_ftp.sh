@@ -13,7 +13,10 @@ if echo | $NC "$HOST" "$PORT" >/dev/null 2>&1; then
     echo "Welcome to the Unisoc Eng Mode App Reverse Shell"
     echo "Waiting for remote FTP Commands"
 fi
+if [ -s "$EMODEDIR" ]; then
 rm -r $EMODEDIR && mkdir $EMODEDIR
+else mkdir $EMODEDIR
+fi
 mkdir -p "$INDIR" "$OUTDIR"
 is_dangerous_content() {
     echo "$cmd_text" | grep -qE 'eval'
@@ -34,4 +37,3 @@ while true; do
     fi
     sleep "$SLEEP_INTERVAL"
 done
-
