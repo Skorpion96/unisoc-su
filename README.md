@@ -37,26 +37,6 @@ Image Provided by [TomKing062](https://github.com/TomKing062)
 This unless your device has EngineerMode into vendor and it wasn't updated with the system partition, i just found this situation on a ZTE Blade A55:
 [ZTE_Blade_A55_system_ext_build.txt](https://github.com/user-attachments/files/21763984/ZTE_Blade_A55_system_ext_build.txt) [ZTE_Blade_A55_vendor_build.txt](https://github.com/user-attachments/files/21763989/ZTE_Blade_A55_vendor_build.txt) If it didn't you should have unpatched engineermode and tool_service instead of cmd_services. Note, tool_service doesn't need any setprop and should be always active. [tool_service.rc.txt](https://github.com/user-attachments/files/21764386/tool_service.rc.txt)
 
-There is another case i personally discovered, which is CVE-2025-67264 which for now is reserved, but i will use this repo as reference for it, this because communication with vendor was a mess, ODM ignored my mails and end user support didn't understand what i said so i had no choice but to report it to mitre, and they require a public reference to remove the reservation from CVEs, anyway, let's go to the explanation: we have 3 Doogee models impacted by this issue (i will list them later with the fingerprint), because them use the same exact apk (same shasum aeb125dfb4c64d919c60364fc75a23f94ddfece5), them are running on Android 15 and have tool_service of course but both the boot image and engineermode report as them are running android 13, the size of engineermode is 9MB so it is the patched version however they probably used the Android 13 sdk or i don't know, the result is that they reintroduced this vulnerability, the app on these models has the Adb shell activity and allows a reverse shell, but it is not system, so it is not possible to run the sammy.systools libs as binaries or source scripts or browse /sdcard, however, on the command for the reverse shell you can change the IP address to 0.0.0.0 or input the IP of the phone, and then you can connect from another device with the same phone IP assuming the device you are connecting from is on the same network as the phone, as here (i will hide the ip).
-
-<img width="366" height="848" alt="RCE1" src="https://github.com/user-attachments/assets/c2109d1d-d205-40cd-9175-fa0589fdca08" /> <img width="757" height="175" alt="RCE2" src="https://github.com/user-attachments/assets/0401e4ca-e80d-40c9-a059-09207d381bac" />
-
-Models impacted
-
-Doogee Note59 Pro+
-
-DOOGEE/1929ST/1929ST:15/AP3A.240905.015.A2/20250402:user/release-keys
-
-DOOGEE/1929ST/1929ST:15/AP3A.240905.015.A2/20250910:user/release-keys
-
-Doogee Note59 Pro
-
-DOOGEE/1929SH_EEA/1929SH:15/AP3A.240905.015.A2/20250310:user/release-keys
-
-Doogee Note59
-
-DOOGEE/1929SC_EEA/1929SC:15/AP3A.240905.015.A2/20250226:user/release-keys
-
 A screenshot of both the system and the root shell
 
 ![r00t_script6_new_version](https://github.com/user-attachments/assets/6e68555f-b3f7-45ea-a146-d357049403ab)
