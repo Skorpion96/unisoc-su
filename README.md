@@ -22,7 +22,7 @@ Now, let's talk about about this exploit, the context is heavily guarded by seli
 ![cmd_services_android13 (user) rc](https://github.com/user-attachments/assets/4018e40e-4a27-47c8-b764-51072119971a)
 ![cmd_services_android9 (eng) rc](https://github.com/user-attachments/assets/0ce7097a-3e45-412a-81a9-5412e2b6ea49)
 
-CVEs that inspired this method: [CVE-2022-47339](https://nvd.nist.gov/vuln/detail/cve-2022-47339) (cmd_services) by Lewei Qu(曲乐炜) and [CVE-2025-31710](https://nvd.nist.gov/vuln/detail/CVE-2025-31710) (com.sprd.engineermode system shell) by me, although Lewei Qu(曲乐炜) had a similar CVE on com.sprd.engineermode seems but I found that after I got mine.
+CVEs that inspired this method: [CVE-2022-47339](https://nvd.nist.gov/vuln/detail/cve-2022-47339) (cmd_services) by Lewei Qu(曲乐炜) and [CVE-2025-31710](https://nvd.nist.gov/vuln/detail/CVE-2025-31710) (com.sprd.engineermode system shell) by me, although Lewei Qu(曲乐炜) had a similar [CVE](https://nvd.nist.gov/vuln/detail/CVE-2022-47341) on com.sprd.engineermode seems but I found that after I got mine.
 
 Also a two special cases which came later, them aren't part of the inspirational CVEs list, the first one it's a reintroduced vulnerability, I'll add it here to make things cleaner: [CVE-2025-67264](https://www.cve.org/CVERecord?id=CVE-2025-67264) (Doogee com.sprd.engineermode bad patch on new unisoc models, covered [here](https://github.com/Skorpion96/unisoc-su/blob/main/CVE-2025-67264.md)) by me as well, the second one which is a similar vulnerability to the one of this repo affecting old unisoc models was covered [here](https://github.com/Skorpion96/unisoc-su/issues/4).
 
