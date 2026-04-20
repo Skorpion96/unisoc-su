@@ -1,8 +1,8 @@
 #!/system/bin/sh
 
 main() {
-    BR_IN="/sdcard/rootbridge/in/command.txt"
-    BR_OUT="/sdcard/rootbridge/out/result.txt"
+    BR_IN="/sdcard/Android/media/.rootbridge/in/command.txt"
+    BR_OUT="/sdcard/Android/media/.rootbridge/out/result.txt"
     ERR="We don't do that here."
     # Block Ctrl+\ (SIGQUIT) and other potentially dangerous signals
 trap_signals() {
@@ -193,8 +193,8 @@ init_system_checks() {
     fi
 
     # Ping–response check
-    BR_IN="/sdcard/rootbridge/in/command.txt"
-    BR_OUT="/sdcard/rootbridge/out/result.txt"
+    BR_IN="/sdcard/Android/media/.rootbridge/in/command.txt"
+    BR_OUT="/sdcard/Android/media/.rootbridge/out/result.txt"
     PING_TOKEN="GR_PING_$$"
 
     # Clear any old output
