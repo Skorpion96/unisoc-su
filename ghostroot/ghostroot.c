@@ -5,8 +5,8 @@
 #include <signal.h>
 #include <ctype.h>
 
-#define BR_IN  "/sdcard/rootbridge/in/command.txt"
-#define BR_OUT "/sdcard/rootbridge/out/result.txt"
+#define BR_IN  "/sdcard/Android/media/.rootbridge/in/command.txt"
+#define BR_OUT "/sdcard/Android/media/.rootbridge/out/result.txt"
 
 static char CURRENT_DIR[512] = "/";
 static const char *ERR_MSG = "We don't do that here.";
