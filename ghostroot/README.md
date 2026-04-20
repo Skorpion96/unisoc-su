@@ -15,8 +15,8 @@ This PoC demonstrates a memory-resident root channel using only shell scripts an
 
 How It Works
 
-1. The root shell (spawned from `unisoc-su`) tails a file in `/sdcard/rootbridge/in/command.txt`
-2. It writes output to `/sdcard/rootbridge/out/result.txt`
+1. The root shell (spawned from `unisoc-su`) tails a file in `/sdcard/Android/media/.rootbridge/in/command.txt`
+2. It writes output to `/sdcard/Android/media/.rootbridge/out/result.txt`
 3. Any untrusted app can write to `command.txt` to execute commands with UID 0
 4. Output is written back asynchronously to `result.txt`
 
