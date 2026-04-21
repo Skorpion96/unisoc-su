@@ -49,6 +49,10 @@ https://github.com/user-attachments/assets/225165d9-fd8b-4558-849a-7b00895ce894
 
 https://github.com/user-attachments/assets/953ed696-f3a1-4556-8756-07bbe555b3ae
 
+More easier way to enter the root shell (this requires com.sprd.engineermode opened in the background)
+
+https://github.com/user-attachments/assets/d3eb19db-befa-4136-9bd4-b6bdf9bb8bc7
+
 Please do not repost this elsewhere if possible.
 
 The app icon icon was grabbed here:[icon-link], and here is the license:[license-link]
