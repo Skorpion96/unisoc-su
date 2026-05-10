@@ -82,7 +82,9 @@ https://github.com/user-attachments/assets/ce83fa97-01cc-40c4-9cb9-3837b7cb2c7f
 
 Easier way to run the rootbridge
 
-https://github.com/user-attachments/assets/b8cfedba-c9fd-40ac-9b2b-91d341e77313
+https://github.com/user-attachments/assets/df4524de-e975-4658-8777-03d6394d717e
+
+
 
 Bonus: It's also possible to get RCE by this method: run the rootbridge from the engineermode reverse shell (with the root check removed) or the cmd_services root shell, then enable an ftp server on an app like MiXplorer, after that go on pc and run an app like FileZilla and input the phone ftp ip, user, password if present and port, after that create an empty text file named command.txt and insert the command/s you want to run, ex: id && pwd, then save it and copy it to /sdcard/Android/media/.rootbridge/in on FileZilla, then go to /sdcard/Android/media/.rootbridge/out and download the result.txt and check the output of the command/s, repeat the steps as you want. I added as well a script to be sourced from untrusted_app context called bridge_ftp.sh, this script listens for commands from /sdcard/Android/media/com.sprd.engineermode/rootbridge/in/command.txt and sends them to /sdcard/Android/media/com.sprd.engineermode/rootbridge/out/result.txt, simple but effective.
 
