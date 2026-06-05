@@ -10,40 +10,48 @@ echo "Disabling $BRAND Update APP to not allow $BRAND-kun or Unisoc Kill the Exp
 echo "Detected brand: $BRAND"
 # Define update apps for different brands
 case "$BRAND" in
-    "ZTE")
-        pm disable-user --user 0 com.zte.zdm
+    "ZTE" | "Nubia")
+        pm disable-user --user 0 com.zte.zdm 2>&1
         ;;
-    "Huawei")
-        pm disable-user --user 0 com.huawei.android.hwouc
+    "Huawei" | "Honor")
+        pm disable-user --user 0 com.huawei.android.hwouc 2>&1
+        pm disable-user --user 0 com.hihonor.ouc 2>&1
         ;;
     "Samsung")
-        pm disable-user --user 0 com.wssyncmldm
+        pm disable-user --user 0 com.wssyncmldm 2>&1
         ;;
     "Xiaomi")
-        pm disable-user --user 0 com.xiaomi.discover
-        pm disable-user --user 0 com.xiaomi.mipicks
+    # This won't work but we will add it anyway (and Xiaomi doesn 't have Unisoc devices, it's just to have everything)
+        pm disable-user --user 0 com.android.updater 2>&1
         ;;
     "OnePlus")
-        pm disable-user --user 0 net.oneplus.odm
+        pm disable-user --user 0 com.oplus.ota 2>&1
+        pm disable-user --user 0 com.oneplus.opbackup 2>&1
         ;;
-    "Realme" | "Oppo" | "Vivo")
-        pm disable-user --user 0 com.oppo.ota
+    "Oppo")
+        pm disable-user --user 0 com.oppo.ota 2>&1
+        ;;
+    "Realme")
+    pm disable-user --user 0 com.coloros.ota 2>&1
+        ;;
+    "Vivo")
+    pm disable-user --user 0 com.bbk.updater 2>&1
         ;;
     "Google")
-        pm disable-user --user 0 com.google.android.gms
-        pm disable-user --user 0 com.google.android.gms.policy_sidecar_aps
+        pm disable-user --user 0 com.google.android.systemupdater 2>&1
         ;;
     "Sony")
-        pm disable-user --user 0 com.sonymobile.customizationselector
+        pm disable-user --user 0 com.sonyericsson.updatecenter 2>&1
         ;;
     "Motorola")
-        pm disable-user --user 0 com.motorola.ccc.ota
+        pm disable-user --user 0 com.motorola.ccc.ota 2>&1
         ;;
     "Asus")
-        pm disable-user --user 0 com.asus.dm
+        pm disable-user --user 0 com.asus.fota 2>&1
         ;;
     "Nokia")
-        pm disable-user --user 0 com.evenwell.partnerbrowsercustomizations
+        pm disable-user --user 0 com.evenwell.OTAUpdate 2>&1
+        pm disable-user --user 0 com.hmdglobal.app.customizationclient.OTAApplication 2>&1
         ;;
     *)
         echo "Brand not recognized or no update app found.\n"
