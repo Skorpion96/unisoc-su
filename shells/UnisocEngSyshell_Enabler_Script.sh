@@ -21,7 +21,7 @@ case "$BRAND" in
         pm disable-user --user 0 com.wssyncmldm 2>&1
         ;;
     "Xiaomi")
-    # This won't work but we will add it anyway (and Xiaomi doesn't have Unisoc devices, it's just to have everything)
+    # This won't work but we will add it anyway
         pm disable-user --user 0 com.android.updater 2>&1
         ;;
     "OnePlus")
