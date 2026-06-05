@@ -6,111 +6,110 @@ if [ "$(whoami)" != "shell" ]; then
 fi
 echo "Running as Shell user!\n"
 BRAND=$(getprop ro.product.brand)
+DIS=$(pm disable-user --user 0)
 echo "Disabling $BRAND Update APP to not allow $BRAND-kun or Unisoc Kill the Exploit in the future"
 echo "Detected brand: $BRAND"
-# Define update apps for different brands and try to disable them (in some cases the app is protected so the disable will fail)
+# Define update apps for different brands and try to disable them (in some cases the app is protected so disable will fail)
 case "$BRAND" in
     "ZTE" | "Nubia")
-        pm disable-user --user 0 com.zte.zdm 2>&1
+        $DIS com.zte.zdm 2>&1 || echo "com.zte.zdm disable failed"
         ;;
     "Huawei" | "Honor")
-        pm disable-user --user 0 com.huawei.android.hwouc 2>&1
-        pm disable-user --user 0 com.hihonor.ouc 2>&1
+        $DIS com.huawei.android.hwouc 2>&1 || echo "com.huawei.android.hwouc disable failed"
+        $DIS com.hihonor.ouc 2>&1 || echo "com.hihonor.ouc disable failed"
         ;;
     "Samsung")
-        pm disable-user --user 0 com.wssyncmldm 2>&1
+        $DIS com.wssyncmldm 2>&1 || echo "com.wssyncmldm disable failed"
         ;;
     "Xiaomi" | "POCO" | "Redmi")
-        pm disable-user --user 0 com.android.updater 2>&1
+        $DIS com.android.updater 2>&1 || echo "com.android.updater disable failed"
         ;;
     "OnePlus")
-        pm disable-user --user 0 com.oplus.ota 2>&1
-        pm disable-user --user 0 com.oneplus.opbackup 2>&1
+        $DIS com.oplus.ota 2>&1 || echo "com.oplus.ota disable failed"
+        $DIS com.oneplus.opbackup 2>&1 || echo "com.oneplus.opbackup disable failed"
         ;;
     "Oppo")
-        pm disable-user --user 0 com.oppo.ota 2>&1
+        $DIS com.oppo.ota 2>&1 || echo "com.oppo.ota disable failed"
         ;;
     "Realme")
-        pm disable-user --user 0 com.coloros.ota 2>&1
+        $DIS com.coloros.ota 2>&1 || echo "com.coloros.ota disable failed"
         ;;
     "Vivo" | "iQOO")
-        pm disable-user --user 0 com.bbk.updater 2>&1
+        $DIS com.bbk.updater 2>&1 || echo "com.bbk.updater disable failed"
         ;;
     "Google")
-        pm disable-user --user 0 com.google.android.systemupdater 2>&1
+        $DIS com.google.android.systemupdater 2>&1 || echo "com.google.android.systemupdater disable failed"
         ;;
     "Sony")
-        pm disable-user --user 0 com.sonyericsson.updatecenter 2>&1
+        $DIS com.sonyericsson.updatecenter 2>&1 || echo "com.sonyericsson.updatecenter disable failed"
         ;;
     "Motorola" | "Lenovo")
-        pm disable-user --user 0 com.motorola.ccc.ota 2>&1
-        pm disable-user --user 0 com.lenovo.lsf.ota 2>&1
+        $DIS com.motorola.ccc.ota 2>&1 || echo "com.motorola.ccc.ota disable failed"
+        $DIS com.lenovo.lsf.ota 2>&1 || echo "com.lenovo.lsf.ota disable failed"
         ;;
     "Asus")
-        pm disable-user --user 0 com.asus.fota 2>&1
+        $DIS com.asus.fota 2>&1 || echo "com.asus.fota disable failed"
         ;;
     "Nokia")
-        pm disable-user --user 0 com.evenwell.OTAUpdate 2>&1
-        pm disable-user --user 0 com.hmdglobal.app.customizationclient.OTAApplication 2>&1
+        $DIS com.evenwell.OTAUpdate 2>&1 || echo "com.evenwell.OTAUpdate disable failed"
+        $DIS com.hmdglobal.app.customizationclient.OTAApplication 2>&1 || echo "com.hmdglobal.app.customizationclient.OTAApplication disable failed"
         ;;
     "Doogee")
-        pm disable-user --user 0 com.doogee.ota 2>&1
-        pm disable-user --user 0 com.mediatek.fota 2>&1
+        $DIS com.doogee.ota 2>&1 || echo "com.doogee.ota disable failed"
+        $DIS com.mediatek.fota 2>&1 || echo "com.mediatek.fota disable failed"
         ;;
     "Blackview" | "Blackview Pro")
-        pm disable-user --user 0 com.blackview.ota 2>&1
-        pm disable-user --user 0 com.mediatek.fota 2>&1
+        $DIS com.blackview.ota 2>&1 || echo "com.blackview.ota disable failed"
+        $DIS com.mediatek.fota 2>&1 || echo "com.mediatek.fota disable failed"
         ;;
     "Ulefone")
-        pm disable-user --user 0 com.ulefone.ota 2>&1
-        pm disable-user --user 0 com.mediatek.fota 2>&1
+        $DIS com.ulefone.ota 2>&1 || echo "com.ulefone.ota disable failed"
+        $DIS com.mediatek.fota 2>&1 || echo "com.mediatek.fota disable failed"
         ;;
     "Oukitel")
-        pm disable-user --user 0 com.oukitel.ota 2>&1
-        pm disable-user --user 0 com.mediatek.fota 2>&1
+        $DIS com.oukitel.ota 2>&1 || echo "com.oukitel.ota disable failed"
+        $DIS com.mediatek.fota 2>&1 || echo "com.mediatek.fota disable failed"
         ;;
     "Umidigi" | "UMIDIGI")
-        pm disable-user --user 0 com.umidigi.ota 2>&1
-        pm disable-user --user 0 com.mediatek.fota 2>&1
+        $DIS com.umidigi.ota 2>&1 || echo "com.umidigi.ota disable failed"
+        $DIS com.mediatek.fota 2>&1 || echo "com.mediatek.fota disable failed"
         ;;
     "Cubot")
-        pm disable-user --user 0 com.cubot.ota 2>&1
-        pm disable-user --user 0 com.mediatek.fota 2>&1
-        ;;
-    "Itel")
-        pm disable-user --user 0 com.itel.ota 2>&1
-        pm disable-user --user 0 com.transsion.ota 2>&1
-        ;;
-    "Tecno" | "TECNO")
-        pm disable-user --user 0 com.tecno.ota 2>&1
-        pm disable-user --user 0 com.transsion.ota 2>&1
-        ;;
-    "Infinix")
-        pm disable-user --user 0 com.infinix.ota 2>&1
-        pm disable-user --user 0 com.transsion.ota 2>&1
-        ;;
-    "Wiko")
-        pm disable-user --user 0 com.wiko.ota 2>&1
-        pm disable-user --user 0 com.mediatek.fota 2>&1
-        ;;
-    "Alcatel" | "TCL")
-        pm disable-user --user 0 com.tcl.ota 2>&1
-        pm disable-user --user 0 com.alcatel.otaupgrade 2>&1
-        ;;
-    "Micromax")
-        pm disable-user --user 0 com.micromax.ota 2>&1
-        ;;
-    "Lava")
-        pm disable-user --user 0 com.lava.ota 2>&1
+        $DIS com.cubot.ota 2>&1 || echo "com.cubot.ota disable failed"
+        $DIS com.mediatek.fota 2>&1 || echo "com.mediatek.fota disable failed"
         ;;
     "Itel" | "Spice")
-        pm disable-user --user 0 com.sprd.ota 2>&1
+        $DIS com.itel.ota 2>&1 || echo "com.itel.ota disable failed"
+        $DIS com.transsion.ota 2>&1 || echo "com.transsion.ota disable failed"
+        $DIS com.sprd.ota 2>&1 || echo "com.sprd.ota disable failed"
+        ;;
+    "Tecno" | "TECNO")
+        $DIS com.tecno.ota 2>&1 || echo "com.tecno.ota disable failed"
+        $DIS com.transsion.ota 2>&1 || echo "com.transsion.ota disable failed"
+        ;;
+    "Infinix")
+        $DIS com.infinix.ota 2>&1 || echo "com.infinix.ota disable failed"
+        $DIS com.transsion.ota 2>&1 || echo "com.transsion.ota disable failed"
+        ;;
+    "Wiko")
+        $DIS com.wiko.ota 2>&1 || echo "com.wiko.ota disable failed"
+        $DIS com.mediatek.fota 2>&1 || echo "com.mediatek.fota disable failed"
+        ;;
+    "Alcatel" | "TCL")
+        $DIS com.tcl.ota 2>&1 || echo "com.tcl.ota disable failed"
+        $DIS com.alcatel.otaupgrade 2>&1 || echo "com.alcatel.otaupgrade disable failed"
+        ;;
+    "Micromax")
+        $DIS com.micromax.ota 2>&1 || echo "com.micromax.ota disable failed"
+        ;;
+    "Lava")
+        $DIS com.lava.ota 2>&1 || echo "com.lava.ota disable failed"
         ;;
     *)
         echo "Brand not recognized or no update app found.\n"
         ;;
 esac
-echo "Update app disabling completed.\n"
+echo "Update app disabling completed (is recommended an OTA presence check just in case in settings, normally it's entry disappears when the app is disabled).\n"
 echo "Unlocking the principal EMode activity with a workaround\n"
 setprop persist.sys.snd.level.pwd 1
 echo "Not really needed but let's unlock as well EMode entirely, in case this will also unlock other sprd based apps like YLog (com.sprd.logmanager), com.sprd.validationtools, com.sprd.camta, com.emode.cameratest (com.zte.burntest.camera), com.zte.flagreset, and more...\n"
