@@ -8,7 +8,7 @@ echo "Running as Shell user!\n"
 BRAND=$(getprop ro.product.brand)
 echo "Disabling $BRAND Update APP to not allow $BRAND-kun or Unisoc Kill the Exploit in the future"
 echo "Detected brand: $BRAND"
-# Define update apps for different brands
+# Define update apps for different brands and try to disable them (in some cases the app is protected so the disable will fail)
 case "$BRAND" in
     "ZTE" | "Nubia")
         pm disable-user --user 0 com.zte.zdm 2>&1
@@ -20,8 +20,7 @@ case "$BRAND" in
     "Samsung")
         pm disable-user --user 0 com.wssyncmldm 2>&1
         ;;
-    "Xiaomi")
-    # This won't work but we will add it anyway
+    "Xiaomi" | "POCO" | "Redmi")
         pm disable-user --user 0 com.android.updater 2>&1
         ;;
     "OnePlus")
@@ -32,10 +31,10 @@ case "$BRAND" in
         pm disable-user --user 0 com.oppo.ota 2>&1
         ;;
     "Realme")
-    pm disable-user --user 0 com.coloros.ota 2>&1
+        pm disable-user --user 0 com.coloros.ota 2>&1
         ;;
-    "Vivo")
-    pm disable-user --user 0 com.bbk.updater 2>&1
+    "Vivo" | "iQOO")
+        pm disable-user --user 0 com.bbk.updater 2>&1
         ;;
     "Google")
         pm disable-user --user 0 com.google.android.systemupdater 2>&1
@@ -43,8 +42,9 @@ case "$BRAND" in
     "Sony")
         pm disable-user --user 0 com.sonyericsson.updatecenter 2>&1
         ;;
-    "Motorola")
+    "Motorola" | "Lenovo")
         pm disable-user --user 0 com.motorola.ccc.ota 2>&1
+        pm disable-user --user 0 com.lenovo.lsf.ota 2>&1
         ;;
     "Asus")
         pm disable-user --user 0 com.asus.fota 2>&1
@@ -52,6 +52,59 @@ case "$BRAND" in
     "Nokia")
         pm disable-user --user 0 com.evenwell.OTAUpdate 2>&1
         pm disable-user --user 0 com.hmdglobal.app.customizationclient.OTAApplication 2>&1
+        ;;
+    "Doogee")
+        pm disable-user --user 0 com.doogee.ota 2>&1
+        pm disable-user --user 0 com.mediatek.fota 2>&1
+        ;;
+    "Blackview" | "Blackview Pro")
+        pm disable-user --user 0 com.blackview.ota 2>&1
+        pm disable-user --user 0 com.mediatek.fota 2>&1
+        ;;
+    "Ulefone")
+        pm disable-user --user 0 com.ulefone.ota 2>&1
+        pm disable-user --user 0 com.mediatek.fota 2>&1
+        ;;
+    "Oukitel")
+        pm disable-user --user 0 com.oukitel.ota 2>&1
+        pm disable-user --user 0 com.mediatek.fota 2>&1
+        ;;
+    "Umidigi" | "UMIDIGI")
+        pm disable-user --user 0 com.umidigi.ota 2>&1
+        pm disable-user --user 0 com.mediatek.fota 2>&1
+        ;;
+    "Cubot")
+        pm disable-user --user 0 com.cubot.ota 2>&1
+        pm disable-user --user 0 com.mediatek.fota 2>&1
+        ;;
+    "Itel")
+        pm disable-user --user 0 com.itel.ota 2>&1
+        pm disable-user --user 0 com.transsion.ota 2>&1
+        ;;
+    "Tecno" | "TECNO")
+        pm disable-user --user 0 com.tecno.ota 2>&1
+        pm disable-user --user 0 com.transsion.ota 2>&1
+        ;;
+    "Infinix")
+        pm disable-user --user 0 com.infinix.ota 2>&1
+        pm disable-user --user 0 com.transsion.ota 2>&1
+        ;;
+    "Wiko")
+        pm disable-user --user 0 com.wiko.ota 2>&1
+        pm disable-user --user 0 com.mediatek.fota 2>&1
+        ;;
+    "Alcatel" | "TCL")
+        pm disable-user --user 0 com.tcl.ota 2>&1
+        pm disable-user --user 0 com.alcatel.otaupgrade 2>&1
+        ;;
+    "Micromax")
+        pm disable-user --user 0 com.micromax.ota 2>&1
+        ;;
+    "Lava")
+        pm disable-user --user 0 com.lava.ota 2>&1
+        ;;
+    "Itel" | "Spice")
+        pm disable-user --user 0 com.sprd.ota 2>&1
         ;;
     *)
         echo "Brand not recognized or no update app found.\n"
