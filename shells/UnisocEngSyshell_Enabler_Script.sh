@@ -6,7 +6,7 @@ if [ "$(whoami)" != "shell" ]; then
 fi
 echo "Running as Shell user!\n"
 BRAND=$(getprop ro.product.brand)
-DIS=$(pm disable-user --user 0)
+DIS="pm disable-user --user 0"
 echo "Disabling $BRAND Update APP to not allow $BRAND-kun or Unisoc Kill the Exploit in the future"
 echo "Detected brand: $BRAND"
 # Define update apps for different brands and try to disable them (in some cases the app is protected so disable will fail)
