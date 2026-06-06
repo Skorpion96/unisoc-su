@@ -118,7 +118,7 @@ echo "On Phone Dialer digit *#*#983#*#* to open EMode Keypad, then press any key
 read -n 1 -s
 echo "On EMode Keypad digit *983*673636# to enable EMode, then press any key to continue..."
 read -n 1 -s
-echo "Go to phone dialer and enter *#*#83781#*#*, then open ADB Shell activity manually from menu or alternatively use any launcher app as Root Activity Launcher or AM Debug, enter 'nc -s 127.0.0.1 -p 1234 -L sh -l' or 'toybox nc -s 127.0.0.1 -p 1234 -L sh -l' and press start (better copy the command out), then go back to the terminal and press any key to continue...\n"
+echo "Go to phone dialer and enter *#*#83781#*#*, then open ADB Shell activity manually from menu or alternatively use any launcher app as Root Activity Launcher or App Manager, enter 'nc -s 127.0.0.1 -p 1234 -L sh -l' or 'toybox nc -s 127.0.0.1 -p 1234 -L sh -l' and press start (better copy the command out), then go back to the terminal and press any key to continue...\n"
 read -n 1 -s
 echo "exit adb/shizuku and on jackpal terminal, cd to the directory where this script is located and run 'cp -R UnisocEngsyshell.sh ~ && cd ~ && chmod +x UnisocEngsyshell.sh && clear && source UnisocEngsyshell.sh'\n"
 echo "you can as well go on jackpal settings and set this as startup command 'cd ~ && clear && source UnisocEngsyshell.sh' to run the system shell when you open the app"
