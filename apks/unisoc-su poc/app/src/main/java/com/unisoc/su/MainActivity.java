@@ -204,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
         mInputView.setTextSize(13f);
         mInputView.setTextColor(COLOR_CMD);
         mInputView.setHintTextColor(0xFF484F58);
-        mInputView.setHint("Insert a command...\u2026");
+        mInputView.setHint("Insert a command...");
         mInputView.setBackground(null);
         mInputView.setImeOptions(EditorInfo.IME_ACTION_SEND);
         mInputView.setSingleLine(true);
