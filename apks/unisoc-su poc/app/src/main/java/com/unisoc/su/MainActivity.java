@@ -65,6 +65,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String CMD_C_LABEL = "help";
     private static final String CMD_C       = "sh help";
+
+    private static final String CMD_D_LABEL = "clear";
+    private static final String CMD_D       = "clear";
     // ────────────────────────────────────────────────────────────────────────
 
     private static final int COLOR_BG     = 0xFF0D1117;
@@ -170,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
         mChoiceBar.setPadding(12, 10, 12, 10);
 
         TextView choiceLabel = new TextView(this);
-        choiceLabel.setText("Run with:  ");
         choiceLabel.setTypeface(Typeface.MONOSPACE);
         choiceLabel.setTextSize(12f);
         choiceLabel.setTextColor(0xFF8B949E);
@@ -178,10 +180,12 @@ public class MainActivity extends AppCompatActivity {
         Button btnA = makeChoiceButton(CMD_A_LABEL, 0xFF388BFD);
         Button btnB = makeChoiceButton(CMD_B_LABEL, 0xFF3FB950);
         Button btnC = makeChoiceButton(CMD_C_LABEL, 0xFFFF1100);
+        Button btnD = makeChoiceButton(CMD_D_LABEL, 0xFFFF7F00);
         mChoiceBar.addView(choiceLabel);
         mChoiceBar.addView(btnA);
         mChoiceBar.addView(btnB);
         mChoiceBar.addView(btnC);
+        mChoiceBar.addView(btnD);
 
         mTerminalContainer = new LinearLayout(this);
         mTerminalContainer.setOrientation(LinearLayout.VERTICAL);
@@ -232,6 +236,7 @@ public class MainActivity extends AppCompatActivity {
         btnA.setOnClickListener(v -> launchSession(CMD_A_LABEL, CMD_A));
         btnB.setOnClickListener(v -> launchSession(CMD_B_LABEL, CMD_B));
         btnC.setOnClickListener(v -> launchSession(CMD_C_LABEL, CMD_C));
+        btnD.setOnClickListener(v -> launchSession(CMD_D_LABEL, CMD_D));
 
         Runnable sendAction = () -> {
             if (mSession == null) return;
