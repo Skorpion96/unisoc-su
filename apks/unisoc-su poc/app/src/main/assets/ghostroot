@@ -71,7 +71,7 @@ handle_exec_command() {
 }
 
     # Check if command starts with exec
-    # use exec alone and not chained or brisge will crash
+    # use exec alone and not chained or bridge will crash
 is_exec_command() {
     case "$1" in
        exec|exec\ *|exec$'\t'*|'&& exec'|'&& exec\ '*|"&& exec$'\t'"*|';exec'|';exec\ '*|";exec$'\t'"*|'&&exec'|'&&exec\ '*|"&&exec$'\t'"*|'; exec'|'; exec\ '*|"; exec$'\t'"*|*'&& exec'|*'&& exec\ '*|*"&& exec$'\t'"*|*';exec'|*';exec\ '*|*";exec$'\t'"*|*' && exec'|*' && exec\ '*|*" && exec$'\t'"*|*' ;exec'|*' ;exec\ '*|*" ;exec$'\t'"*)
