@@ -1,0 +1,215 @@
+#!/system/bin/sh
+
+main() {
+    BR_IN="/sdcard/Android/media/.rootbridge/in/command.txt"
+    BR_OUT="/sdcard/Android/media/.rootbridge/out/result.txt"
+    ERR="We don't do that here."
+    # Block Ctrl+\ (SIGQUIT) and other potentially dangerous signals
+trap_signals() {
+    trap 'printf "\n%s\n" "$ERR"' QUIT
+    trap 'printf "\n%s\n" "$ERR"' INT
+    trap 'printf "\n%s\n" "$ERR"' TSTP
+}
+
+trap_signals
+
+    usage() {
+echo "Usage:\n
+  sh ghostroot -c <command>  ->   run a single root command\n
+  sh ghostroot               ->   enter interactive ghostroot shell\n
+  <exit>                     ->   exits the rootbridge.sh\n
+  <q>                        ->   exits the ghostroot, you can always enter again and resume\n
+  <help>                     ->   show this help message\n"
+}
+
+# Check if command contains unsafe exit usage
+is_safe_exit() {
+    local cmd="$1"
+    if [ "$cmd" = "exit" ]; then
+        return 0
+    fi
+    if echo "$cmd" | grep -qE '\bexit\b'; then
+        if echo "$cmd" | grep -qE "(echo|printf|cat)[[:space:]].*[\"'].*exit.*[\"']"; then
+            return 0
+        else
+            return 1
+        fi
+    fi    
+    return 0
+}
+
+handle_exec_command() {
+    local cmd="$1"
+    local is_c_mode="$2"
+    
+    # Extract the command after 'exec'
+    local exec_cmd=$(echo "$cmd" | sed 's/^[[:space:]]*exec[[:space:]]*//')
+    if [ -z "$exec_cmd" ]; then
+        echo $ERR
+        return 0
+    fi
+        # Check for unsafe exit in exec command
+        if ! is_safe_exit "$exec_cmd"; then
+            echo "$ERR"
+            if [ "$is_c_mode" = "true" ]; then
+                return 0
+            else
+                return 1
+            fi
+        fi
+    # Execute the command safely after extraction
+    echo "$exec_cmd" > "$BR_IN"
+    sleep 0.2
+    cat "$BR_OUT"
+    
+    # If in -c mode, exit normally. If in shell mode, continue the loop.
+    if [ "$is_c_mode" = "true" ]; then
+        return 0
+    else
+        return 1  # Continue shell loop
+    fi
+}
+
+    # Check if command starts with exec
+    # use exec alone and not chained or brisge will crash
+is_exec_command() {
+    case "$1" in
+       exec|exec\ *|exec$'\t'*|'&& exec'|'&& exec\ '*|"&& exec$'\t'"*|';exec'|';exec\ '*|";exec$'\t'"*|'&&exec'|'&&exec\ '*|"&&exec$'\t'"*|'; exec'|'; exec\ '*|"; exec$'\t'"*|*'&& exec'|*'&& exec\ '*|*"&& exec$'\t'"*|*';exec'|*';exec\ '*|*";exec$'\t'"*|*' && exec'|*' && exec\ '*|*" && exec$'\t'"*|*' ;exec'|*' ;exec\ '*|*" ;exec$'\t'"*)
+            return 0
+            ;;
+    esac
+
+    return 1
+}
+
+ghostshell() {
+        while :; do
+            if [ -z "$INIT_DONE" ]; then
+                echo "Welcome to the ghostroot shell (powered by cmd_skt root socket)\n"
+                echo "Type 'q' to quit, 'exit' to stop rootbridge.\n"
+                export INIT_DONE=1
+            fi
+
+            read -r CMD
+            
+            [ "$CMD" = "q" ] && echo "ghostroot shell provided by the Elite x Skorpion96" && exit 1
+            [ "$CMD" = "exit" ] && echo exit > "$BR_IN" && echo "The ghostroot will now exit as the rootbridge.sh got closed." && exit 1
+            
+            [ -n "$CMD" ] || continue
+
+            if [ "$CMD" = "help" ]; then
+                usage
+                continue
+            fi
+            # Check for unsafe exit usage before processing
+            if ! is_safe_exit "$CMD"; then
+                echo "$ERR"
+                continue
+            fi
+
+            if is_exec_command "$CMD"; then
+                handle_exec_command "$CMD" "false"
+                continue
+            fi
+            
+            echo "$CMD" > "$BR_IN"
+            sleep 0.2
+            cat "$BR_OUT"
+            
+         done
+    }
+
+   # If no args, start shell
+   [ $# -eq 0 ] && ghostshell
+
+# Handle -c mode
+    if [ "$1" = "-c" ]; then
+      shift
+      
+      if [ $# -eq 0 ]; then
+          echo "Error: -c requires a command argument"
+          usage
+      fi
+      
+      CMD=""
+      for arg in "$@"; do
+          if [ -z "$CMD" ]; then
+              CMD="$arg"
+          else
+              CMD="$CMD $arg"
+          fi
+      done
+      
+      if [ -z "$CMD" ] || [ "$CMD" = " " ]; then
+          echo "Error: empty command provided"
+          exit 1
+      fi
+
+      if [ "$CMD" = "help" ]; then
+          usage
+          exit 0
+      fi
+      # Check for unsafe exit usage in -c mode
+      if [ "$CMD" != "exit" ] && ! is_safe_exit "$CMD"; then
+          echo "$ERR"
+          exit 1
+      fi
+
+# Handle exec commands in -c mode
+      if is_exec_command "$CMD"; then
+          handle_exec_command "$CMD" "true"
+          exit 0
+      fi
+
+printf '%s\n' "$CMD" > "$BR_IN"
+      sleep 0.2
+      cat "$BR_OUT"
+    else
+      usage
+    fi
+}
+
+# --- Initialize and validate system only once ---
+init_system_checks() {
+    # Service check
+    SERVICE_STATE="$(getprop init.svc.cmd_services)"
+    if [ "$SERVICE_STATE" != "running" ]; then
+        echo "Error: cmd_services not running."
+        echo "Please start it before running this script."
+        exit 1
+    fi
+
+    # Ping–response check
+    BR_IN="/sdcard/Android/media/.rootbridge/in/command.txt"
+    BR_OUT="/sdcard/Android/media/.rootbridge/out/result.txt"
+    PING_TOKEN="GR_PING_$$"
+
+    # Clear any old output
+    > "$BR_OUT"
+
+    # Send ping
+    echo "echo $PING_TOKEN" > "$BR_IN"
+
+    # Wait for up to 2 seconds for correct reply
+    timeout=20  # 20 × 0.1s = 2 seconds
+    while [ $timeout -gt 0 ]; do
+        if grep -q "$PING_TOKEN" "$BR_OUT"; then
+            export SYSTEM_INIT_DONE=1
+            return 0
+        fi
+        sleep 0.1
+        timeout=$((timeout - 1))
+    done
+
+    # If we reach here, ping failed
+    echo "Error: rootbridge is not responding."
+    echo "Please start rootbridge before running this script."
+    exit 1
+}
+
+# Only run system checks once
+if [ -z "$SYSTEM_INIT_DONE" ]; then
+    init_system_checks
+fi
+
+main "$@"

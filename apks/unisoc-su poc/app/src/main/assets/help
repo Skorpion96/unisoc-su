@@ -1,0 +1,5 @@
+#!/bin/sh
+echo "1. Run with adb shell the UnisocEngSyshell_Enabler_Script.sh and unlock com.sprd.engineermode if necessary\n"
+echo "2. Run the reverse shell on com.sprd.engineermode Adb shell activity (nc -s 127.0.0.1 -p 1234 -L sh -l), then press Get a system shell on this app\n"
+echo "3. To get a cmd_services root shell, push the bridge on /sdcard, install the sammy.systools app, then run 'cli-pie-auto -c /sdcard/rootbridge.sh' with full cli-pie-auto path and click Start ghostroot on this app\n"
+echo "Click on the commands button to show commands again"

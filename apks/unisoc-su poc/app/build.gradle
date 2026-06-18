@@ -1,0 +1,32 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.unisoc.su'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.unisoc.su"
+        minSdk 30
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.github.jackpal:Android-Terminal-Emulator:v1.0.70'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
