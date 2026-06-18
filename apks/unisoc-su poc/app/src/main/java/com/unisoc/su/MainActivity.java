@@ -198,7 +198,6 @@ public class MainActivity extends AppCompatActivity {
         mInputRow.setBackgroundColor(COLOR_BG);
 
         TextView prompt = new TextView(this);
-        prompt.setText("$ ");
         prompt.setTypeface(Typeface.MONOSPACE);
         prompt.setTextSize(14f);
         prompt.setTextColor(COLOR_PROMPT);
