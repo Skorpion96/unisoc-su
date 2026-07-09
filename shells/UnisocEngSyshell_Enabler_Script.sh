@@ -111,9 +111,9 @@ case "$BRAND" in
 esac
 echo "Update app disabling completed (is recommended an OTA presence check just in case in settings, normally it's entry disappears when the app is disabled).\n"
 echo "Unlocking the principal EMode activity with a workaround\n"
-setprop persist.sys.snd.level.pwd 1
+setprop persist.sys.snd.level.pwd 1    # this on com.sprd.engineermode is the second level unlock password (evident from snd i guess, but is referenced as second in the code as well)
 echo "Not really needed but let's unlock as well EMode entirely, in case this will also unlock other sprd based apps like YLog (com.sprd.logmanager), com.sprd.validationtools, com.sprd.camta, com.emode.cameratest (com.zte.burntest.camera), com.zte.flagreset, and more...\n"
-setprop persist.sys.emode.enable 1
+setprop persist.sys.emode.enable 1     # and this is the first level password, there is also a security code immediately after (33284) but unlock seems to work anyway and even with passwords in reverse...
 echo "On Phone Dialer digit *#*#983#*#* to open EMode Keypad, then press any key to continue..."
 read -n 1 -s
 echo "On EMode Keypad digit *983*673636# to enable EMode, then press any key to continue..."
