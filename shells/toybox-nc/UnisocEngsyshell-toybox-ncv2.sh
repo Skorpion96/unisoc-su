@@ -5,7 +5,7 @@ HOST="127.0.0.1"
 PORT="1234"
 
 # Check if the listener is available
-if echo | /system/bin/toybox nc $HOST $PORT >/dev/null 2>&1; then
+if [ "$(echo 'id -Z' | /system/bin/toybox nc $HOST $PORT)" = "u:r:sprd_engineermode_app:s0:c512,c768" ]; then
 echo "Welcome to the Unisoc Eng Mode App System Shell"
 echo "Enter Commands"
     # Attempt to connect to the listener and provide a shell
