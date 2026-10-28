@@ -34,6 +34,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -57,10 +58,10 @@ import java.io.FileOutputStream;
 public class MainActivity extends AppCompatActivity {
 
     // ── Comandi iniziali a scelta ────────────────────────────────────────────
-    private static final String CMD_A_LABEL = "Get a system shell";
+    private static final String CMD_A_LABEL = "system shell";
     private static final String CMD_A       = "sh rev.sh";
 
-    private static final String CMD_B_LABEL = "Start ghostroot";
+    private static final String CMD_B_LABEL = "ghostroot";
     private static final String CMD_B       = "source ghostroot";
 
     private static final String CMD_C_LABEL = "help";
@@ -257,20 +258,25 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private Button makeChoiceButton(String label, int textColor) {
-        Button btn = new Button(this);
-        btn.setText(label);
-        btn.setTypeface(Typeface.MONOSPACE);
-        btn.setTextSize(10f);
-        btn.setTextColor(textColor);
-        btn.setBackgroundColor(0xFF21262D);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(8, 0, 8, 0);
-        btn.setLayoutParams(lp);
-        return btn;
-    }
+private Button makeChoiceButton(String label, int textColor) {
+    Button btn = new Button(this);
+    btn.setText(label);
+    btn.setTypeface(Typeface.MONOSPACE);
+    btn.setTextSize(8f);
+    btn.setTextColor(textColor);
+    btn.setBackgroundColor(0xFF21262D);
+    btn.setSingleLine(true);
+    btn.setEllipsize(null); // don't truncate, we'll shrink text instead
+    btn.setAutoSizeTextTypeUniformWithConfiguration(
+            4, 8, 1, TypedValue.COMPLEX_UNIT_SP); // shrink text 4–8sp as needed
+
+    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f); // width=0 + weight=1
+    lp.setMargins(6, 4, 6, 4);
+    btn.setLayoutParams(lp);
+    btn.setAllCaps(false);
+    return btn;
+}
 
     private void launchSession(String label, String initialCommand) {
         // Reuse the existing shell if one is already running, instead of
