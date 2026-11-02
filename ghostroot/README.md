@@ -24,6 +24,7 @@ Limitations
 
 - Requires an authorized client shell already running to connect to the root client (e.g., via `cli-pie`)
 - Only works until the shell dies or system reboots
+- The root client will only disappear from logs if the `ghostroot` is run inside `termux` (or probably apps with `termux` APIs), it can be run from anywhere but from other places than `termux` it will be logged
 - No automatic persistence — this is for research only
 
 Why This Matters
@@ -50,7 +51,7 @@ SELinux logs nothing meaningful. No client appears connected. No traces — yet 
 The System Shell Was Just the Entry Point
 
 Even though the original system shell vulnerability (now patched) was the entry vector, the real issue is deeper:
-The root process remains alive, unmonitored, and unprotected.
+The root process remains alive, unmonitored and unprotected.
 Unisoc patched the door but left the house open.
 
 SELinux Fails to Understand the Channel
@@ -59,7 +60,7 @@ SELinux policies are unaware of the file-based IPC between the root client and t
 
 If Accessed Again, It’s Weaponizable
 
-If this root client is ever accessed again — by malware, a misused API, or another app — it becomes a fully functional, stealthy root shell. Think in-RAM RAT.
+If this root client is ever accessed again by another app, malware with `termux` APIs or similar — it becomes a fully functional, stealthy root shell. Think in-RAM RAT.
 
 For Research and Awareness
 
@@ -71,7 +72,7 @@ Educational use only. Do not run this on devices you do not own.
 
 How-To
 
-Source the rootbridge.sh from the root shell (i'd copy it first on a directory it can access as on /sdcard), then you can close the root shell terminal and the engineermode app, after that on any untrusted_app with a terminal run the ghostroot script.
+Source the rootbridge.sh from the root shell (i'd copy it first on a directory it can access as on /sdcard), then you can close the root shell terminal and the engineermode app, after that on `termux` (or any untrusted_app if you don't care about logging) run the ghostroot script.
 
 
 ![ghostroot_termux](https://github.com/user-attachments/assets/4b5988cb-c3b6-44dc-8f30-c2bed8d3a333)
